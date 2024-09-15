@@ -87,42 +87,47 @@ def resize_with_max_distortion(data: np.ndarray,
         ValueError: If the input data shape is larger than the target shape.
                     If the input data is not a 2D or 3D array.
     """
-    # Assert data is an array representing an image
-    if not (len(data.shape) == 2 or len(data.shape) == 3):
-        raise ValueError("Input data must be 2D or 3D array")
-
-    # get shapes
+    # Get original dimensions
+    height, width = data.shape[:2]
     target_height, target_width = target_shape
-    height, width, *_ = data.shape    
 
-    # calculate distortion for current values
-    hratio = target_height / height
-    wratio =  target_width / width
+    # Calculate aspect ratios
+    original_aspect_ratio = width / height
+    target_aspect_ratio = target_width / target_height
 
-    # Calculate the distortion
-    distortion = abs(hratio - wratio)
+    # Calculate allowable aspect ratio range
+    allowed_aspect_ratio_min = original_aspect_ratio * (1 - max_stretch_distortion)
+    allowed_aspect_ratio_max = original_aspect_ratio * (1 + max_stretch_distortion)
 
-    # Ensure the distortion is within the allowed limit
-    if distortion > max_stretch_distortion:
-        # Adjust both ratios proportionally to reduce distortion
-        if hratio < wratio:
-            wratio = hratio + min(max_stretch_distortion, wratio - hratio)
-        else:
-            hratio = wratio + min(max_stretch_distortion, hratio - wratio)
-    
-    # Calculate new dimensions
-    new_height = math.floor(height * hratio)
-    new_width = math.floor(width * wratio)
+    # Adjust target aspect ratio to be within allowable range
+    adjusted_aspect_ratio = min(max(target_aspect_ratio, allowed_aspect_ratio_min), allowed_aspect_ratio_max)
+
+    # Determine new dimensions based on adjusted aspect ratio
+    if adjusted_aspect_ratio > original_aspect_ratio:
+        # Adjust width based on adjusted aspect ratio
+        new_height = min(target_height, height * (1 + max_stretch_distortion))
+        new_width = int(new_height * adjusted_aspect_ratio)
+        if new_width > target_width:
+            new_width = target_width
+            new_height = int(new_width / adjusted_aspect_ratio)
+    else:
+        # Adjust height based on adjusted aspect ratio
+        new_width = min(target_width, width * (1 + max_stretch_distortion))
+        new_height = int(new_width / adjusted_aspect_ratio)
+        if new_height > target_height:
+            new_height = target_height
+            new_width = int(new_height * adjusted_aspect_ratio)
+
+    # Ensure new dimensions are integers
+    new_height = int(new_height)
+    new_width = int(new_width)
 
     # Resize the image
-    if resize_function is None:
+    if resize_function is not None:
+        resized_image = resize_function(data, (new_width, new_height))
+    else:
         resized_image = np.resize(data, (new_height, new_width))
-    else:
-        resized_image = resize_function(data, (new_height, new_width))
 
-    # padd the image if needed to fit the target shape
-    if (new_height, new_width) != (target_height, target_width):
-        padded_image = padding_2d(resized_image, target_shape, fill_value)
-        return padded_image
-    else:
-        return resized_image
+    # Pad the image to target dimensions
+    padded_image = padding_2d(resized_image, (target_height, target_width), fill_value)
+    return padded_image
