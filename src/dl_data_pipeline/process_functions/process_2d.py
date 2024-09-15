@@ -55,7 +55,7 @@ def padding_2d(data: np.ndarray, target_shape: Tuple[int, int], fill_value: floa
 
 def resize_with_max_distortion(data: np.ndarray, 
            target_shape: Tuple[float, float], 
-           max_stretch_distortion: float, 
+           max_ratio_distortion: float, 
            fill_value: float | int = 1.0,
            resize_function: Callable[[np.ndarray, tuple], np.ndarray] | None = None
            ) -> np.ndarray:
@@ -71,7 +71,7 @@ def resize_with_max_distortion(data: np.ndarray,
     Args:
         data (np.ndarray): The input 2D or 3D array to be resized. Typically, this represents an image.
         target_shape (Tuple[float, float]): The desired target shape (height, width) for the output array.
-        max_stretch_distortion (float): The maximum allowable difference between the horizontal and vertical 
+        max_ratio_distortion (float): The maximum allowable difference between the horizontal and vertical 
                                         stretch ratios. This controls how much the aspect ratio can change during 
                                         resizing.
         fill_value (float, optional): The value used for padding the image if the resized image does not perfectly 
@@ -96,8 +96,8 @@ def resize_with_max_distortion(data: np.ndarray,
     target_aspect_ratio = target_width / target_height
 
     # Calculate allowable aspect ratio range
-    allowed_aspect_ratio_min = original_aspect_ratio * (1 - max_stretch_distortion)
-    allowed_aspect_ratio_max = original_aspect_ratio * (1 + max_stretch_distortion)
+    allowed_aspect_ratio_min = original_aspect_ratio * (1 - max_ratio_distortion)
+    allowed_aspect_ratio_max = original_aspect_ratio * (1 + max_ratio_distortion)
 
     # Adjust target aspect ratio to be within allowable range
     adjusted_aspect_ratio = min(max(target_aspect_ratio, allowed_aspect_ratio_min), allowed_aspect_ratio_max)
@@ -105,14 +105,14 @@ def resize_with_max_distortion(data: np.ndarray,
     # Determine new dimensions based on adjusted aspect ratio
     if adjusted_aspect_ratio > original_aspect_ratio:
         # Adjust width based on adjusted aspect ratio
-        new_height = min(target_height, height * (1 + max_stretch_distortion))
+        new_height = min(target_height, height * (1 + max_ratio_distortion))
         new_width = int(new_height * adjusted_aspect_ratio)
         if new_width > target_width:
             new_width = target_width
             new_height = int(new_width / adjusted_aspect_ratio)
     else:
         # Adjust height based on adjusted aspect ratio
-        new_width = min(target_width, width * (1 + max_stretch_distortion))
+        new_width = min(target_width, width * (1 + max_ratio_distortion))
         new_height = int(new_width / adjusted_aspect_ratio)
         if new_height > target_height:
             new_height = target_height
