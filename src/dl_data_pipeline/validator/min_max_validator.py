@@ -13,7 +13,7 @@ class MinMaxValidator(Validator):
 
     def validate(self, data: Any) -> None:
         data_min = np.min(data)
-        if np.min(data) < self.__min:
+        if data_min < self.__min:
             raise ValidationError(f"Min of data is {data_min}, this is less than {self.__min}, defined by user.")
         
         data_max = np.max(data)
