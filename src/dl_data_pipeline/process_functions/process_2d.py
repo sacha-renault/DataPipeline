@@ -83,6 +83,10 @@ def resize_with_max_distortion(data: np.ndarray,
         ValueError: If the input data shape is larger than the target shape.
                     If the input data is not a 2D or 3D array.
     """
+    # test valid range for dim
+    if len(data.shape) not in [2, 3]:
+        raise ValueError("Input data is not a 2D or 3D array")
+
     # Get original dimensions
     height, width = data.shape[:2]
     target_height, target_width = target_shape
@@ -103,9 +107,7 @@ def resize_with_max_distortion(data: np.ndarray,
         # Adjust width based on adjusted aspect ratio
         new_height = min(target_height, height * (1 + max_ratio_distortion))
         new_width = int(new_height * adjusted_aspect_ratio)
-        if new_width > target_width:
-            new_width = target_width
-            new_height = int(new_width / adjusted_aspect_ratio)
+
     else:
         # Adjust height based on adjusted aspect ratio
         new_width = min(target_width, width * (1 + max_ratio_distortion))
