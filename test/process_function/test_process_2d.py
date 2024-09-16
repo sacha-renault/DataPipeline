@@ -14,15 +14,15 @@ def test_padding_2d_rgb():
 def test_padding_2d_error_not_accepted_dim():
     original_image = np.random.rand(256)
     with pytest.raises(ValueError):
-        padded = process_2d.padding_2d(original_image, (512, 512), 0)
+        process_2d.padding_2d(original_image, (512, 512), 0)
     original_image = np.random.rand(2,2,2,2)
     with pytest.raises(ValueError):
-        padded = process_2d.padding_2d(original_image, (512, 512), 0)
+        process_2d.padding_2d(original_image, (512, 512), 0)
 
 def test_padding_2d_error_too_big():
     original_image = np.random.rand(256, 256)
     with pytest.raises(ValueError):
-        padded = process_2d.padding_2d(original_image, (128, 128), 0)
+        process_2d.padding_2d(original_image, (128, 128), 0)
 
 def test_padding_2d_bw():
     original_image = np.random.rand(256,256)
@@ -60,20 +60,14 @@ def test_resize_with_max_distortion_no_distortion():
     data = np.random.rand(256, 128, 3)
     target_shape = (512, 256)
     max_ratio_distortion = 0.0
-
     resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
-    
-    # Aspect ratio should be preserved
     assert resized_image.shape == (512, 256, 3)
 
 def test_resize_with_max_distortion_with_distortion():
     data = np.random.rand(256, 256, 3)
     target_shape = (512, 256)
     max_ratio_distortion = 0.2
-
     resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
-    
-    # With distortion, the image may not preserve the exact aspect ratio but should still fit within the target shape
     assert resized_image.shape == (512, 256, 3)
 
 def test_resize_with_max_distortion_padding():
@@ -90,7 +84,7 @@ def test_resize_with_max_distortion_padding():
     assert np.all(resized_image[:, -128:, :] == fill_value)     # Right padding
 
 def test_resize_with_max_distortion_invalid_input_shape():
-    data = np.random.rand(256, 256, 256, 3)  # Invalid shape (4D)
+    data = np.random.rand(256, 256, 256, 3)  # Invalid shape
     target_shape = (512, 512)
     max_ratio_distortion = 0.0
 
@@ -105,8 +99,8 @@ def test_resize_with_max_distortion_non_image():
     assert resized_image.shape == (512, 512)
 
 def test_resize_with_max_distortion_adjust_width_then_height():
-    data = np.random.rand(125, 100, 3)  # Original aspect ratio = 2.0
-    target_shape = (100, 100)  # Target aspect ratio = 1.0
+    data = np.random.rand(125, 100, 3)
+    target_shape = (100, 100)
     max_ratio_distortion = 5
 
     resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
@@ -114,8 +108,8 @@ def test_resize_with_max_distortion_adjust_width_then_height():
 
     
 def test_resize_with_max_distortion_adjust_height_then_width():
-    data = np.random.rand(200, 100, 3)  # Original aspect ratio = 2.0
-    target_shape = (150, 150)  # Target aspect ratio = 1.0
+    data = np.random.rand(200, 100, 3)
+    target_shape = (150, 150)
     max_ratio_distortion = 0
 
     resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
