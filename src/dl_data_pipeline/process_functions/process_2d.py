@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -141,7 +141,7 @@ def open_rgb_image(path: str) -> np.ndarray:
 
 def image_to_channel_num(image: np.ndarray, 
                          channel_number_target: int = 3, 
-                         fill_value: float | int = 1.0) -> np.ndarray:
+                         fill_value: float | int = 0.0) -> np.ndarray:
     """
     Convert an image to the specified number of channels.
 
