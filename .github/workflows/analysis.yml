@@ -31,4 +31,4 @@ jobs:
 
       - name: Run PyTest
         run: |
-          python -m pytest --cov-config=.coveragerc
+          python -m pytest --cov=src --cov-config=.coveragerc
