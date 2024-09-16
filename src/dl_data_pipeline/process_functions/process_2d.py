@@ -72,7 +72,7 @@ def resize_with_max_distortion(data: np.ndarray,
         target_shape (Tuple[float, float]): The desired target shape (height, width) for the output array.
         max_ratio_distortion (float): The maximum allowable difference between the horizontal and vertical 
                                         stretch ratios. This controls how much the aspect ratio can change during 
-                                        resizing.
+                                        resizing. 0 as max distortion ensure aspect ratio is kept
         fill_value (float, optional): The value used for padding the image if the resized image does not perfectly 
                                       match the target shape. Defaults to 1.0.
 
@@ -124,3 +124,51 @@ def resize_with_max_distortion(data: np.ndarray,
     # Pad the image to target dimensions
     padded_image = padding_2d(resized_image, (target_height, target_width), fill_value)
     return padded_image
+
+def open_rgb_image(path: str) -> np.ndarray:
+    """Open an image using cv2 and convert back to RGB.
+
+    Args:
+        path (str): path of the image
+
+    Returns:
+        np.ndarray: array representing the image
+    """
+    img = cv2.imread(path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img_array = np.array(img_rgb)
+    return img_array
+
+def image_to_channel_num(image: np.ndarray, 
+                         channel_number_target: int = 3, 
+                         fill_value: float | int = 1.0) -> np.ndarray:
+    """
+    Convert an image to the specified number of channels.
+
+    Args:
+        image (np.ndarray): Input image array, which can be grayscale (2D), 
+                            single-channel (3D), or multi-channel (3D).
+        channel_number_target (int, optional): Target number of channels. Defaults to 3.
+        fill_value (float | int, optional): Value used to fill new channels if needed. Defaults to 1.0.
+
+    Returns:
+        np.ndarray: Image array with the specified number of channels.
+    """
+    # if image is BW
+    if len(image.shape) == 2:
+        image_3d = np.repeat(image[:,:, np.newaxis], channel_number_target, -1)
+    
+    # if image is a BW 3d with single channel
+    elif len(image.shape) == 3 and image.shape[2] == 1:
+        image_3d = np.repeat(image, channel_number_target, -1)
+    
+    # If the image has fewer channels than the target
+    elif len(image.shape) == 3 and image.shape[2] < channel_number_target:
+        image_3d = np.full((*image.shape[:2], channel_number_target), fill_value, dtype=image.dtype)
+        image_3d[:,:,:image.shape[2]] = image
+    
+    # image has more channels than the target => truncate 
+    else:
+        image_3d = image[:,:,:channel_number_target]
+
+    return image_3d

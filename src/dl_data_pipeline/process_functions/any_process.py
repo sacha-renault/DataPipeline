@@ -17,12 +17,6 @@ def rescale(data: np.ndarray, min_value: float = 0.0, max_value: float = 1.0) ->
     Returns:
         np.ndarray: The rescaled data array, with values in the range [min_value, max_value].
 
-    Example:
-        >>> data = np.array([2, 4, 6, 8, 10])
-        >>> rescaled_data = rescale(data, 0, 1)
-        >>> print(rescaled_data)
-        [0.   0.25 0.5  0.75 1.  ]
-
     Raises:
         ValueError: If data contains constant values (e.g., all elements are the same),
                     which would lead to division by zero during rescaling.
