@@ -4,7 +4,7 @@ DATA_PLACEHOLDER = object()
 """ An object to be put instead of data before pipeline is called.
 """
 
-def deffered_execution(func):
+def deferred_execution(func):
     """
     A decorator that defers the execution of a function until the actual data is provided.
 

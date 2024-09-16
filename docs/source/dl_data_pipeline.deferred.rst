@@ -1,21 +1,21 @@
-dl\_data\_pipeline.deffered package
+dl\_data\_pipeline.deferred package
 ===================================
 
 Submodules
 ----------
 
-dl\_data\_pipeline.deffered.deffered\_functions module
+dl\_data\_pipeline.deferred.deferred\_functions module
 ------------------------------------------------------
 
-.. automodule:: dl_data_pipeline.deffered.deffered_functions
+.. automodule:: dl_data_pipeline.deferred.deferred_functions
    :members:
    :undoc-members:
    :show-inheritance:
 
-dl\_data\_pipeline.deffered.deffered\_wrapper module
+dl\_data\_pipeline.deferred.deferred\_wrapper module
 ----------------------------------------------------
 
-.. automodule:: dl_data_pipeline.deffered.deffered_wrapper
+.. automodule:: dl_data_pipeline.deferred.deferred_wrapper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ dl\_data\_pipeline.deffered.deffered\_wrapper module
 Module contents
 ---------------
 
-.. automodule:: dl_data_pipeline.deffered
+.. automodule:: dl_data_pipeline.deferred
    :members:
    :undoc-members:
    :show-inheritance:

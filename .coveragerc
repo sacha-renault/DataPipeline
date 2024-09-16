@@ -1,7 +1,5 @@
 [run]
 source = src
-omit =
-    src/dl_data_pipeline/deffered/deffered_functions.py
 
 [report]
 fail_under = 80
