@@ -59,7 +59,7 @@ Add some forward validator
 
     # with this, we ensure image will always be formatted the correct way
     pipe.add_forward_validator(MinMaxValidator(0, 255))
-    pipe.add_forward_process(ShapeValidator(256,256,3))
+    pipe.add_forward_validator(ShapeValidator(256,256,3))
 
 .. tip::
 
@@ -72,35 +72,41 @@ Excecute the pipeline
 
     processed_data = pipe.forward("path/to/data.png") 
 
-.. warning::
+.. note::
     Previous example use a string as argument for the pipeline, that's because first function
     load an array from path. You can customize the pipeline and use it with any type.
 
-Deffered excecution
+deferred excecution
 ------------------------
 
-To have a more user friendly interface. it's possible to use deffered excecution function. 
-We can find the function under deffered package.
+To have a more user friendly interface. it's possible to use deferred excecution function. 
+We can find the function under deferred package.
 
 .. code-block:: python
 
-    # import deffered functions
+    # import deferred functions
     from dl_data_pipeline import DATA_PLACEHOLDER as DPH
-    from dl_data_pipeline.deffered import deffered_functions
+    from dl_data_pipeline.deferred import use_deferred_execution
+
+    use_deferred_execution() # all processing function are now deferred
 
     # we use function as if we call them directly, with a placeholder for data
-    pipe.add_forward_process(deffered_functions.deffered_rescale(DPH, 0, 1)) # we pass placeholder instead of data
+    pipe.add_forward_process(process_2d.rescale(DPH, 0, 1)) # we pass placeholder instead of data, and the rest is normal
+
+.. caution::
+
+   Once `use_deferred_execution()` is called once, module has to be reloaded to restore function normal states.
 
 Create your own functions
 --------------------------
 
-Finally, you can code any function you like to fit your goal. If you prefere using deffered function instead of classic function, 
-You can define them with the deffered decorator. The only requirement is that the data is first argument (VAR_ONLY).
+Finally, you can code any function you like to fit your goal. If you prefere using deferred function instead of classic function, 
+You can define them with the deferred decorator. The only requirement is that the data is first argument (VAR_ONLY).
 
 .. code-block:: python
 
-    from dl_data_pipeline import deffered_execution
+    from dl_data_pipeline import deferred_execution
 
-    @deffered_execution
+    @deferred_execution
     def your_processing_function(data: Any, *args, **kwargs) -> Any:
         ... # your code

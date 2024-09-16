@@ -1,4 +1,4 @@
-from .defered_wrapper import DATA_PLACEHOLDER, deferred_execution
+from .deferred_wrapper import DATA_PLACEHOLDER, deferred_execution
 
 
 def use_deferred_execution():

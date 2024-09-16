@@ -4,14 +4,6 @@ dl\_data\_pipeline.deferred package
 Submodules
 ----------
 
-dl\_data\_pipeline.deferred.deferred\_functions module
-------------------------------------------------------
-
-.. automodule:: dl_data_pipeline.deferred.deferred_functions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dl\_data\_pipeline.deferred.deferred\_wrapper module
 ----------------------------------------------------
 
