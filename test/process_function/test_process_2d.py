@@ -9,6 +9,19 @@ def test_padding_2d_rgb():
     assert np.array_equal(original_image, padded[128:384,128:384,:]), "RGB padding test failed."
     assert padded.dtype == original_image.dtype
 
+def test_padding_2d_error_not_accepted_dim():
+    original_image = np.random.rand(256)
+    with pytest.raises(ValueError):
+        padded = process_2d.padding_2d(original_image, (512, 512), 0)
+    original_image = np.random.rand(2,2,2,2)
+    with pytest.raises(ValueError):
+        padded = process_2d.padding_2d(original_image, (512, 512), 0)
+
+def test_padding_2d_error_too_big():
+    original_image = np.random.rand(256, 256)
+    with pytest.raises(ValueError):
+        padded = process_2d.padding_2d(original_image, (128, 128), 0)
+
 def test_padding_2d_bw():
     original_image = np.random.rand(256,256)
     padded = process_2d.padding_2d(original_image, (512, 512), 1.0)
