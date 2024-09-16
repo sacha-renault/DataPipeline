@@ -174,3 +174,35 @@ def image_to_channel_num(image: np.ndarray,
         image_3d = image[:,:,:channel_number_target]
 
     return image_3d
+
+def image_hwc_to_chw(data: np.ndarray) -> np.ndarray:
+    """
+    Converts an image from HWC (Height-Width-Channel) format to CHW (Channel-Height-Width) format.
+
+    Args:
+        data (np.ndarray): The input image array in HWC format. 
+                           The shape should be (height, width, channels).
+
+    Returns:
+        np.ndarray: The image array in CHW format.
+                    The shape will be (channels, height, width).
+    """
+    if len(data.shape) != 3:
+        raise ValueError("input data must be dim 3")
+    return np.transpose(data, [2, 0, 1])
+
+def image_chw_to_hwc(data: np.ndarray) -> np.ndarray:
+    """
+    Converts an image from CHW (Channel-Height-Width) format to HWC (Height-Width-Channel) format.
+
+    Args:
+        data (np.ndarray): The input image array in CHW format. 
+                           The shape should be (channels, height, width).
+
+    Returns:
+        np.ndarray: The image array in HWC format.
+                    The shape will be (height, width, channels).
+    """
+    if len(data.shape) != 3:
+        raise ValueError("input data must be dim 3")
+    return np.transpose(data, [1, 2, 0])

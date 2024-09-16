@@ -1,7 +1,9 @@
 from typing import Tuple
+from unittest.mock import patch
 
 import pytest
 import numpy as np
+import cv2
 
 from src.dl_data_pipeline.process_functions import process_2d
 
@@ -114,3 +116,47 @@ def test_resize_with_max_distortion_adjust_height_then_width():
 
     resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
     assert resized_image.shape == (*target_shape, 3) 
+
+def test_hwc_to_chw():
+    shape = (10, 5, 2)
+    data = np.random.rand(*shape)
+    ndata = process_2d.image_hwc_to_chw(data)
+    assert ndata.shape == (data.shape[2], data.shape[0], data.shape[1])
+
+def test_chw_to_hwc():
+    shape = (10, 5, 2)
+    data = np.random.rand(*shape)
+    ndata = process_2d.image_chw_to_hwc(data)
+    assert ndata.shape == (data.shape[1], data.shape[2], data.shape[0])
+
+def test_hwc_to_chw_wrong_dim():
+    shape = (10, 5)
+    data = np.random.rand(*shape)
+    with pytest.raises(ValueError):
+        process_2d.image_hwc_to_chw(data)
+        
+
+def test_chw_to_hwc_wrong_dim():
+    shape = (10, 5, 2, 5)
+    data = np.random.rand(*shape)
+    with pytest.raises(ValueError):
+        process_2d.image_chw_to_hwc(data)
+
+@patch('cv2.cvtColor')
+@patch('cv2.imread')
+def test_open_rgb_image(mock_imread, mock_cvtColor):
+    # Mocked return value for cv2.imread
+    mock_img = np.ones((100, 100, 3), dtype=np.uint8)  # Mocked image in BGR format
+    mock_imread.return_value = mock_img
+
+    # Mocked return value for cv2.cvtColor
+    mock_img_rgb = np.ones((100, 100, 3), dtype=np.uint8) * 255  # Mocked image in RGB format
+    mock_cvtColor.return_value = mock_img_rgb
+
+    # Call the function
+    result = process_2d.open_rgb_image("dummy/path/to/image.jpg")
+
+    # Assertions
+    mock_imread.assert_called_once_with("dummy/path/to/image.jpg")
+    mock_cvtColor.assert_called_once_with(mock_img, cv2.COLOR_BGR2RGB)
+    np.testing.assert_array_equal(result, mock_img_rgb)
