@@ -19,9 +19,12 @@ class MinMaxValidator(Validator):
         if self.__min is not None:
             data_min = np.min(data)
             if data_min < self.__min:
-                raise ValidationError(f"Min of data is {data_min}, this is less than {self.__min}, defined by user.")
+                raise ValidationError(f"Min of data is {data_min}, "
+                    f"this is less than {self.__min}, "
+                    f"defined by user.")
         
         if self.__max is not None:
             data_max = np.max(data)
             if data_max > self.__max:
-                raise ValidationError(f"Max of data is {data_max}, this is more than {self.__max}, defined by user.")
+                raise ValidationError(f"Max of data is {data_max}, "
+                    f"this is more than {self.__max}, defined by user.")
