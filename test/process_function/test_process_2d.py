@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pytest
 import numpy as np
 
@@ -52,3 +54,69 @@ def test_image_to_channel_num_3d3():
     truncated = process_2d.image_to_channel_num(original_image, 3)
     assert np.array_equal(truncated, original_image[:,:,:3])
     assert truncated.dtype == original_image.dtype
+
+
+def test_resize_with_max_distortion_no_distortion():
+    data = np.random.rand(256, 128, 3)
+    target_shape = (512, 256)
+    max_ratio_distortion = 0.0
+
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+    
+    # Aspect ratio should be preserved
+    assert resized_image.shape == (512, 256, 3)
+
+def test_resize_with_max_distortion_with_distortion():
+    data = np.random.rand(256, 256, 3)
+    target_shape = (512, 256)
+    max_ratio_distortion = 0.2
+
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+    
+    # With distortion, the image may not preserve the exact aspect ratio but should still fit within the target shape
+    assert resized_image.shape == (512, 256, 3)
+
+def test_resize_with_max_distortion_padding():
+    data = np.random.rand(256, 256, 3)
+    target_shape = (512, 512)
+    max_ratio_distortion = 0.0
+    fill_value = 0.5
+
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion, fill_value)
+    assert resized_image.shape == (512, 512, 3)
+    assert np.all(resized_image[:128, :, :] == fill_value)      # Top padding
+    assert np.all(resized_image[-128:, :, :] == fill_value)     # Bottom padding
+    assert np.all(resized_image[:, :128, :] == fill_value)      # Left padding
+    assert np.all(resized_image[:, -128:, :] == fill_value)     # Right padding
+
+def test_resize_with_max_distortion_invalid_input_shape():
+    data = np.random.rand(256, 256, 256, 3)  # Invalid shape (4D)
+    target_shape = (512, 512)
+    max_ratio_distortion = 0.0
+
+    with pytest.raises(ValueError, match=r"Input data is not a 2D or 3D array"):
+        process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+
+def test_resize_with_max_distortion_non_image():
+    data = np.random.rand(256, 256)
+    target_shape = (512, 512)
+    max_ratio_distortion = 10
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+    assert resized_image.shape == (512, 512)
+
+def test_resize_with_max_distortion_adjust_width_then_height():
+    data = np.random.rand(125, 100, 3)  # Original aspect ratio = 2.0
+    target_shape = (100, 100)  # Target aspect ratio = 1.0
+    max_ratio_distortion = 5
+
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+    assert resized_image.shape == (*target_shape, 3)
+
+    
+def test_resize_with_max_distortion_adjust_height_then_width():
+    data = np.random.rand(200, 100, 3)  # Original aspect ratio = 2.0
+    target_shape = (150, 150)  # Target aspect ratio = 1.0
+    max_ratio_distortion = 0
+
+    resized_image = process_2d.resize_with_max_distortion(data, target_shape, max_ratio_distortion)
+    assert resized_image.shape == (*target_shape, 3) 
