@@ -1,17 +1,20 @@
-name: Deploy Sphinx Documentation
+name: Deploy Sphinx Documentation to GitHub Pages
 
 on:
   push:
     branches:
-      - docs # Change this to your default branch if it's not 'main'
+      - docs # Change this to the branch where your documentation resides
 
 jobs:
-  build:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -20,15 +23,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx-rtd-theme  # Add other dependencies here if needed
+          pip install sphinx sphinx-rtd-theme  # Add any other dependencies needed
 
       - name: Build the documentation
         run: |
           cd docs
           make html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/_build/html
+          path: "docs/build/html"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
