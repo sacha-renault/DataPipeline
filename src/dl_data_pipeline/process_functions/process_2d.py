@@ -1,6 +1,6 @@
 from typing import Tuple, Callable
-import math
 
+import cv2
 import numpy as np
 
 import numpy as np
@@ -57,7 +57,6 @@ def resize_with_max_distortion(data: np.ndarray,
            target_shape: Tuple[float, float], 
            max_ratio_distortion: float, 
            fill_value: float | int = 1.0,
-           resize_function: Callable[[np.ndarray, tuple], np.ndarray] | None = None
            ) -> np.ndarray:
     """
     Resizes the input 2D or 3D array (image) to the target shape with a constraint on maximum allowable distortion.
@@ -76,9 +75,6 @@ def resize_with_max_distortion(data: np.ndarray,
                                         resizing.
         fill_value (float, optional): The value used for padding the image if the resized image does not perfectly 
                                       match the target shape. Defaults to 1.0.
-        resize_function (Callable[[np.ndarray, tuple], np.ndarray], optional): A custom function to handle resizing. 
-                                                                              If None, a simple default method will 
-                                                                              be used. Defaults to None.
 
     Returns:
         np.ndarray: The resized and possibly padded array with the specified target shape.
@@ -123,10 +119,7 @@ def resize_with_max_distortion(data: np.ndarray,
     new_width = int(new_width)
 
     # Resize the image
-    if resize_function is not None:
-        resized_image = resize_function(data, (new_width, new_height))
-    else:
-        resized_image = np.resize(data, (new_height, new_width))
+    resized_image = cv2.resize(data, (new_width, new_height))
 
     # Pad the image to target dimensions
     padded_image = padding_2d(resized_image, (target_height, target_width), fill_value)
