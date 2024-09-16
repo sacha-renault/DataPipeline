@@ -20,6 +20,13 @@ def rescale(data: np.ndarray, min_value: float = 0.0, max_value: float = 1.0) ->
     Raises:
         ValueError: If data contains constant values (e.g., all elements are the same),
                     which would lead to division by zero during rescaling.
+
+    Examples:
+        >>> import numpy as np
+        >>> data = np.array([10, 20, 30, 40, 50])
+        >>> rescaled_data = rescale(data, min_value=-1, max_value=1)
+        >>> print(rescaled_data)
+        [-1.  -0.5  0.   0.5  1. ]
     """
     # calculate ranges
     data_min = np.min(data)

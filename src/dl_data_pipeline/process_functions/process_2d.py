@@ -21,6 +21,14 @@ def padding_2d(data: np.ndarray, target_shape: Tuple[int, int], fill_value: floa
     Raises:
         ValueError: If the input data shape is larger than the target shape.
                     If the input data is not a 2D or 3D array.
+
+    Examples:
+        >>> data = np.array([[1, 2], [3, 4]])
+        >>> padding_2d(data, (4, 4), fill_value=0)
+        array([[0., 0., 0., 0.],
+               [0., 1., 2., 0.],
+               [0., 3., 4., 0.],
+               [0., 0., 0., 0.]])
     """   
     # Get data shape
     shape = data.shape
@@ -135,6 +143,11 @@ def open_rgb_image(path: str) -> np.ndarray:
 
     Returns:
         np.ndarray: array representing the image
+
+    Examples:
+        >>> img = open_rgb_image('path/to/image.jpg')
+        >>> img.shape
+        (height, width, 3)
     """
     img = cv2.imread(path)
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -155,6 +168,14 @@ def image_to_channel_num(image: np.ndarray,
 
     Returns:
         np.ndarray: Image array with the specified number of channels.
+
+    Examples:
+        >>> image = np.array([[1, 2], [3, 4]])
+        >>> image_to_channel_num(image, channel_number_target=3)
+        array([[[1, 1, 1],
+                [2, 2, 2]],
+               [[3, 3, 3],
+                [4, 4, 4]]])
     """
     # if image is BW
     if len(image.shape) == 2:

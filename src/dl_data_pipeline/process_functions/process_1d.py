@@ -7,6 +7,15 @@ def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
         desired_audio_length (int): the target length for the audio
     Return
         (np.ndarray): correctly shaped audio array
+
+    Examples:
+        >>> data = np.array([[1, 2, 3], [4, 5, 6]])
+        >>> rpad_rcut(data, 5)
+        array([[1., 2., 3., 0., 0.],
+               [4., 5., 6., 0., 0.]])
+        >>> rpad_rcut(data, 2)
+        array([[1, 2],
+               [4, 5]])
     """
     assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
@@ -24,6 +33,15 @@ def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
         desired_audio_length (int): the target length for the audio
     Return
         (np.ndarray): correctly shaped audio array
+
+    Examples:
+        >>> data = np.array([[1, 2, 3], [4, 5, 6]])
+        >>> lpad_lcut(data, 5)
+        array([[0., 0., 1., 2., 3.],
+               [0., 0., 4., 5., 6.]])
+        >>> lpad_lcut(data, 2)
+        array([[2, 3],
+               [5, 6]])
     """
     assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
@@ -41,6 +59,15 @@ def center_pad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray
         desired_audio_length (int): the target length for the audio
     Return
         (np.ndarray): correctly shaped audio array
+
+    Examples:
+        >>> data = np.array([[1, 2, 3], [4, 5, 6]])
+        >>> center_pad_rcut(data, 5)
+        array([[0., 1., 2., 3., 0.],
+               [0., 4., 5., 6., 0.]])
+        >>> center_pad_rcut(data, 2)
+        array([[2, 3],
+               [5, 6]])
     """
     assert len(data.shape) == 2, "Audio should be 2D array, use reshape(1, -1) for 1D array"
     audio_length = data.shape[1]
