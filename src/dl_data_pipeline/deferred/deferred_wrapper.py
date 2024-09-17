@@ -1,8 +1,5 @@
 from functools import wraps
-
-DATA_PLACEHOLDER = object()
-""" An object to be put instead of data before pipeline is called.
-"""
+from ..pipeline.pipe_node import PipeNode
 
 def deferred_execution(func):
     """
@@ -21,15 +18,23 @@ def deferred_execution(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if len(args) == 0:
-            raise ValueError(f"cannot differe execution of with 0 argument")
-        elif args[0] is not DATA_PLACEHOLDER and args[0] is not None:
-            raise ValueError(f"args[0] must be either DATA_PLACEHOLDER or None, not : {args[0]}")
-        
-        # Remove the placeholder and prepare the deferred function
-        args_no_data = args[1:]
-        deferred_func = lambda data: func(data, *args_no_data, **kwargs)
+        # Split args into Node / Non Node
+        args_no_data = []
+        parents = []
+        for arg in args:
+            if isinstance(arg, PipeNode):
+                parents.append(arg)
+            else:
+                args_no_data.append(arg)
+
+        # ensure there is at least ONE PipeNode
+        if len(parents) == 0:
+            raise Exception("Found no PipeNode as positional argument"
+                            "If you write a pipeline function, test it without `deferred_execution`"
+                            "decorator")
+
+        # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
+        deferred_func = lambda *data: func(*data, *args_no_data, **kwargs)
         deferred_func.__name__ = func.__name__
-        return deferred_func
+        return PipeNode(deferred_func, parents)
     return wrapper
-            
