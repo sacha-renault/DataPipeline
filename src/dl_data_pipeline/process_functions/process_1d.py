@@ -1,5 +1,7 @@
 import numpy as np
+from ..deferred import deferred_execution
 
+@deferred_execution
 def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:
@@ -26,6 +28,7 @@ def rpad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     # Else
     return data[:,:desired_audio_length]
 
+@deferred_execution
 def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:
@@ -52,6 +55,7 @@ def lpad_lcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     # Else
     return data[:,desired_audio_length:]
 
+@deferred_execution
 def center_pad_rcut(data : np.ndarray, desired_audio_length : int) -> np.ndarray:
     """ Pad or cut the audio array so that output has a length equal to desired_audio_length
     Args:

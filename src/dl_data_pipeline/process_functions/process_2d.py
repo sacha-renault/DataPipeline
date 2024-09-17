@@ -3,9 +3,9 @@ from typing import Tuple
 import cv2
 import numpy as np
 
-import numpy as np
-from typing import Tuple
+from ..deferred import deferred_execution
 
+@deferred_execution
 def padding_2d(data: np.ndarray, target_shape: Tuple[int, int], fill_value: float = 1.0) -> np.ndarray:
     """
     Pads a 2D (or 3D) array to the target shape with the specified fill value.
@@ -29,7 +29,7 @@ def padding_2d(data: np.ndarray, target_shape: Tuple[int, int], fill_value: floa
                [0., 1., 2., 0.],
                [0., 3., 4., 0.],
                [0., 0., 0., 0.]])
-    """   
+    """
     # Get data shape
     shape = data.shape
 
@@ -60,28 +60,27 @@ def padding_2d(data: np.ndarray, target_shape: Tuple[int, int], fill_value: floa
 
     return padded_data
 
-
-def resize_with_max_distortion(data: np.ndarray, 
-           target_shape: Tuple[float, float], 
-           max_ratio_distortion: float, 
-           fill_value: float | int = 1.0,
+@deferred_execution
+def resize_with_max_distortion(data: np.ndarray,
+           target_shape: Tuple[float, float],
+           max_ratio_distortion: float,
            ) -> np.ndarray:
     """
     Resizes the input 2D or 3D array (image) to the target shape with a constraint on maximum allowable distortion.
 
-    This function resizes an image (or any 2D/3D array) to a specified target shape while controlling the amount 
-    of distortion (change in aspect ratio) allowed during the resizing process. If the distortion exceeds the 
+    This function resizes an image (or any 2D/3D array) to a specified target shape while controlling the amount
+    of distortion (change in aspect ratio) allowed during the resizing process. If the distortion exceeds the
     specified `max_stretch_distortion`, the function adjusts the stretch ratios accordingly to minimize distortion.
-    After resizing, the image may be padded with the specified `fill_value` to ensure the final output matches the 
+    After resizing, the image may be padded with the specified `fill_value` to ensure the final output matches the
     target shape exactly.
 
     Args:
         data (np.ndarray): The input 2D or 3D array to be resized. Typically, this represents an image.
         target_shape (Tuple[float, float]): The desired target shape (height, width) for the output array.
-        max_ratio_distortion (float): The maximum allowable difference between the horizontal and vertical 
-                                        stretch ratios. This controls how much the aspect ratio can change during 
+        max_ratio_distortion (float): The maximum allowable difference between the horizontal and vertical
+                                        stretch ratios. This controls how much the aspect ratio can change during
                                         resizing. 0 as max distortion ensure aspect ratio is kept
-        fill_value (float, optional): The value used for padding the image if the resized image does not perfectly 
+        fill_value (float, optional): The value used for padding the image if the resized image does not perfectly
                                       match the target shape. Defaults to 1.0.
 
     Returns:
@@ -131,10 +130,9 @@ def resize_with_max_distortion(data: np.ndarray,
     # Resize the image
     resized_image = cv2.resize(data, (new_width, new_height))
 
-    # Pad the image to target dimensions
-    padded_image = padding_2d(resized_image, (target_height, target_width), fill_value)
-    return padded_image
+    return resized_image
 
+@deferred_execution
 def open_rgb_image(path: str) -> np.ndarray:
     """Open an image using cv2 and convert back to RGB.
 
@@ -154,14 +152,15 @@ def open_rgb_image(path: str) -> np.ndarray:
     img_array = np.array(img_rgb)
     return img_array
 
-def image_to_channel_num(image: np.ndarray, 
-                         channel_number_target: int = 3, 
+@deferred_execution
+def image_to_channel_num(image: np.ndarray,
+                         channel_number_target: int = 3,
                          fill_value: float | int = 0.0) -> np.ndarray:
     """
     Convert an image to the specified number of channels.
 
     Args:
-        image (np.ndarray): Input image array, which can be grayscale (2D), 
+        image (np.ndarray): Input image array, which can be grayscale (2D),
                             single-channel (3D), or multi-channel (3D).
         channel_number_target (int, optional): Target number of channels. Defaults to 3.
         fill_value (float | int, optional): Value used to fill new channels if needed. Defaults to 1.0.
@@ -180,28 +179,29 @@ def image_to_channel_num(image: np.ndarray,
     # if image is BW
     if len(image.shape) == 2:
         image_3d = np.repeat(image[:,:, np.newaxis], channel_number_target, -1)
-    
+
     # if image is a BW 3d with single channel
     elif len(image.shape) == 3 and image.shape[2] == 1:
         image_3d = np.repeat(image, channel_number_target, -1)
-    
+
     # If the image has fewer channels than the target
     elif len(image.shape) == 3 and image.shape[2] < channel_number_target:
         image_3d = np.full((*image.shape[:2], channel_number_target), fill_value, dtype=image.dtype)
         image_3d[:,:,:image.shape[2]] = image
-    
-    # image has more channels than the target => truncate 
+
+    # image has more channels than the target => truncate
     else:
         image_3d = image[:,:,:channel_number_target]
 
     return image_3d
 
+@deferred_execution
 def image_hwc_to_chw(data: np.ndarray) -> np.ndarray:
     """
     Converts an image from HWC (Height-Width-Channel) format to CHW (Channel-Height-Width) format.
 
     Args:
-        data (np.ndarray): The input image array in HWC format. 
+        data (np.ndarray): The input image array in HWC format.
                            The shape should be (height, width, channels).
 
     Returns:
@@ -212,12 +212,13 @@ def image_hwc_to_chw(data: np.ndarray) -> np.ndarray:
         raise ValueError("input data must be dim 3")
     return np.transpose(data, [2, 0, 1])
 
+@deferred_execution
 def image_chw_to_hwc(data: np.ndarray) -> np.ndarray:
     """
     Converts an image from CHW (Channel-Height-Width) format to HWC (Height-Width-Channel) format.
 
     Args:
-        data (np.ndarray): The input image array in CHW format. 
+        data (np.ndarray): The input image array in CHW format.
                            The shape should be (channels, height, width).
 
     Returns:

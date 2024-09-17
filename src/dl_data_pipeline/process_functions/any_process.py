@@ -1,12 +1,15 @@
 import numpy as np
 
+from ..deferred import deferred_execution
+
+@deferred_execution
 def rescale(data: np.ndarray, min_value: float = 0.0, max_value: float = 1.0) -> np.ndarray:
     """
     Rescales the input data array to a specified range [min_value, max_value].
 
     This function takes a NumPy array and rescales its values to fit within the specified
-    minimum and maximum values. The rescaling is done by first shifting the data so that 
-    the minimum value becomes zero, then scaling it to the target range, and finally 
+    minimum and maximum values. The rescaling is done by first shifting the data so that
+    the minimum value becomes zero, then scaling it to the target range, and finally
     shifting it to start from the specified minimum value.
 
     Args:

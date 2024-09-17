@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from typing import List, Any, Tuple, Dict
+from .pipe_node import PipeNode
 
 from ..validator import Validator
 
@@ -19,83 +20,65 @@ class Pipeline:
         forward(data): Processes the data through the forward functions and validators.
         backward(data): Processes the data through the backward functions and validators.
     """
-    def __init__(self) -> None:
-        # forward 
-        self.__forward: List[Callable] = []
-        self.__forward_args: List[Tuple] = []
-        self.__forward_kwargs: List[Dict] = []
-        self.__forward_validators: List[Validator] = []
+    def __init__(self, inputs: PipeNode | list[PipeNode], outputs: PipeNode | list[PipeNode]) -> None:
+        if not (isinstance(inputs, PipeNode) or (isinstance(inputs, list) and all(isinstance(x, PipeNode) for x in inputs))):
+            raise ValueError("inputs must be a PipeNode or a list of PipeNode")
 
-        # backward 
-        self.__backward: List[Callable] = []
-        self.__backward_args: List[Tuple] = []
-        self.__backward_kwargs: List[Dict] = []
-        self.__backward_validators: List[Validator] = []
+        if not (isinstance(outputs, PipeNode) or (isinstance(outputs, list) and all(isinstance(x, PipeNode) for x in outputs))):
+            raise ValueError("outputs must be a PipeNode or a list of PipeNode")
 
-    def add_forward_process(self, func: Callable, *args, **kwargs) -> None:
-        if callable(func):
-            self.__forward.append(func)
-            self.__forward_args.append(args)
-            self.__forward_kwargs.append(kwargs)
-        else:
-            raise TypeError(f"func must be a callable object")
-        
-    def add_forward_validator(self, validator: Validator) -> None:
-        if isinstance(validator, Validator):
-            self.__forward_validators.append(validator)
-        else:
-            raise TypeError(f"validator must be a Validator object")
-        
-    def add_backward_process(self, func: Callable, *args, **kwargs) -> None:
-        if callable(func):
-            self.__backward.append(func)
-            self.__backward_args.append(args)
-            self.__backward_kwargs.append(kwargs)
-        else:
-            raise TypeError(f"func must be a callable object")
-        
-    def add_backward_validator(self, validator: Validator) -> None:
-        if isinstance(validator, Validator):
-            self.__backward_validators.append(validator)
-        else:
-            raise TypeError(f"validator must be a Validator object")
-    
-    def forward(self, data: Any) -> Any:
-        call_iterable = zip(self.__forward, self.__forward_args, self.__forward_kwargs)
+        self.__inputs = inputs if isinstance(inputs, list) else [inputs]
+        self.__outputs = outputs if isinstance(outputs, list) else [outputs]
+        self.__validators: list[list[Validator]] = [[] for _ in range(len(self.__outputs))]
 
-        # Process data sequentially
-        for func, args, kwargs in call_iterable:
-            try:
-                data = func(data, *args, **kwargs)
-            except Exception as e:
-                raise RuntimeError(f"Error in forward process {func.__name__}: {e}")
+        # init an exec graph
+        exec_graph: list[PipeNode] = []
+        visited = set()
+        virtual_node = PipeNode(parent = self.__outputs)
+
+        # lambda func to get ordered in topological order
+        def build_topo(v: PipeNode):
+            if v not in visited:
+                visited.add(v)
+                for child in v.parent:
+                    build_topo(child)
+                exec_graph.append(v)
+
+        # build the actual graph
+        build_topo(virtual_node)
+        self.__exec_graph = exec_graph[:-1] # remove the last ghost node
+
+    def add_validator(self, validator: Validator, output_index: int) -> None:
+        if not isinstance(validator, Validator):
+            raise TypeError(f"validator must be Validator type, not {type(validator)}")
+        if output_index >= len(self.__outputs) or output_index < 0:
+            raise IndexError(f"output_index isn't included in [0, len(outputs)[")
+
+        self.__validators[output_index].append(validator)
 
 
-        # ensure data don't raise any error with validator
-        for validator in self.__forward_validators:
-            validator.validate(data)
 
-        return data
-    
-    def backward(self, data: Any) -> Any:
-        call_iterable = zip(self.__backward, self.__backward_args, self.__backward_kwargs)
+    def __call__(self, *args: Any) -> Any:
+        if len(args) != len(self.__inputs):
+            raise ValueError(f"Pipeline takes {len(self.__inputs)} positional(s) argument(s), "
+                             f"but {len(args)} were(was) provided")
 
-        # process data sequentially
-        for func, args, kwargs in call_iterable:
-            try:
-                data = func(data, *args, **kwargs)
-            except Exception as e:
-                raise RuntimeError(f"Error in backward process {func.__name__}: {e}")
+        # set value in inputs node
+        for node, arg in zip(self.__inputs, args):
+            node._set_value(arg)
 
+        # excecute
+        for node in self.__exec_graph:
+            node.execute()
 
-        # ensure data don't raise any error with validator
-        for validator in self.__backward_validators:
-            validator.validate(data)
-        return data
-    
-    def __repr__(self) -> str:
-        return (f"Pipeline("
-                f"forward_processes={len(self.__forward)}, "
-                f"forward_validators={len(self.__forward_validators)}, "
-                f"backward_processes={len(self.__backward)}, "
-                f"backward_validators={len(self.__backward_validators)})")
+        # return the output node value
+        output = [node.value for node in self.__outputs]
+
+        # validate data
+        for output_data, validators in zip(output, self.__validators):
+            for validator in validators:
+                validator.validate(output_data)
+
+        if len(output) == 1:
+            return output[0]
+        return output

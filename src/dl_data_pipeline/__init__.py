@@ -6,4 +6,4 @@ except:
 from .pipeline.data_pipeline import Pipeline
 from .process_functions import (process_1d, process_2d, any_process)
 from .validator.base_validator import ValidationError
-from .deferred import (DATA_PLACEHOLDER, deferred_execution)
+from .deferred import (deferred_execution)
