@@ -133,6 +133,27 @@ class Pipeline:
             return output[0]
         return output
 
+    def as_deferred(self, *args) -> PipeNode:
+        # Split args into Node / Non Node
+        args_no_data = []
+        parents = []
+        for arg in args:
+            if isinstance(arg, PipeNode):
+                parents.append(arg)
+            else:
+                args_no_data.append(arg)
+
+        # ensure there is at least ONE PipeNode
+        if len(parents) == 0:
+            raise Exception("Found no PipeNode as positional argument"
+                            "If you write a pipeline function, test it without `deferred_execution`"
+                            "decorator")
+
+        # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
+        deferred_func = lambda *data: self(*data, *args_no_data)
+        deferred_func.__name__ = "Pipeline"
+        return PipeNode(deferred_func, parents)
+
     def __repr__(self) -> str:
         return (f"{self.__class__.__name__}("
                 f"num_inputs = {len(self.__inputs)}, "
