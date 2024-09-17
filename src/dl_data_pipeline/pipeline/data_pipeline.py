@@ -104,9 +104,7 @@ class Pipeline:
         return output
 
     def __repr__(self) -> str:
-        input_nodes = ', '.join([repr(node) for node in self.__inputs])
-        output_nodes = ', '.join([repr(node) for node in self.__outputs])
         return (f"{self.__class__.__name__}("
-                f"inputs=[{input_nodes}], "
-                f"outputs=[{output_nodes}], "
-                f"num_validators={len(self.__validators)})")
+                f"num_inputs = {len(self.__inputs)}, "
+                f"num_outputs = {len(self.__outputs)}, "
+                f"num_validators = {len(self.__validators)})")
