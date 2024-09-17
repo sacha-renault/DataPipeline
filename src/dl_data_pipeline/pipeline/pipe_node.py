@@ -12,26 +12,26 @@ Classes:
     PipeNode: A node in a pipeline that can execute a function based on the values of its parent nodes.
 
 Usage Example:
-    from pipe_node import PipeNode
+>>> from pipe_node import PipeNode
 
-    # Define a simple function to be executed by the node
-    def add(x, y):
-        return x + y
+>>> # Define a simple function to be executed by the node
+>>> def add(x, y):
+>>>     return x + y
 
-    # Create nodes
-    node1 = PipeNode(name="input1")
-    node2 = PipeNode(name="input2")
-    node3 = PipeNode(func=add, parent=[node1, node2], name="sum")
+>>> # Create nodes
+>>> node1 = PipeNode(name="input1")
+>>> node2 = PipeNode(name="input2")
+>>> node3 = PipeNode(func=add, parent=[node1, node2], name="sum")
 
-    # Set values for input nodes
-    node1._set_value(3)
-    node2._set_value(4)
+>>> # Set values for input nodes
+>>> node1._set_value(3)
+>>> node2._set_value(4)
 
-    # Execute the node with the function
-    node3.execute()
+>>> # Execute the node with the function
+>>> node3.execute()
 
-    # Get the result
-    result = node3.value  # result should be 7
+>>> # Get the result
+>>> result = node3.value  # result should be 7
 """
 
 
