@@ -6,26 +6,46 @@ from ..validator import Validator
 
 class Pipeline:
     """
-    A class to manage a sequence of forward and backward processes with optional validation.
+    A class that represents a data processing pipeline consisting of interconnected `PipeNode` objects.
 
-    The `Pipeline` class allows for adding functions to process data in a forward and backward manner.
-    Each process can have associated arguments, keyword arguments, and validators to ensure the processed
-    data meets certain criteria.
+    The `Pipeline` class manages the flow of data from input nodes through a series of operations
+    to produce output nodes. It supports validation of output data through user-defined `Validator` objects.
+
+    Args:
+        inputs (PipeNode | list[PipeNode]): A single `PipeNode` or a list of `PipeNode` objects
+            that serve as the inputs to the pipeline.
+        outputs (PipeNode | list[PipeNode]): A single `PipeNode` or a list of `PipeNode` objects
+            that serve as the outputs of the pipeline.
+
+    Raises:
+        ValueError: If `inputs` or `outputs` is not a `PipeNode` or a list of `PipeNode`.
 
     Methods:
-        add_forward_process(func, *args, **kwargs): Adds a function to the forward process list.
-        add_forward_validator(validator): Adds a validator to the forward validators list.
-        add_backward_process(func, *args, **kwargs): Adds a function to the backward process list.
-        add_backward_validator(validator): Adds a validator to the backward validators list.
-        forward(data): Processes the data through the forward functions and validators.
-        backward(data): Processes the data through the backward functions and validators.
+        add_validator(validator: Validator, output_index: int) -> None:
+            Adds a `Validator` to validate the output at the specified index.
+
+        __call__(*args: Any) -> Any:
+            Executes the pipeline with the provided inputs and returns the output(s).
+
+    Example:
+        # Create a simple pipeline
+        input_node = PipeNode()
+        output_node = PipeNode(parent=input_node)
+        pipeline = Pipeline(inputs=input_node, outputs=output_node)
+
+        # Add a validator to the output
+        validator = MyValidator()
+        pipeline.add_validator(validator, output_index=0)
+
+        # Execute the pipeline
+        result = pipeline(input_data)
     """
     def __init__(self, inputs: PipeNode | list[PipeNode], outputs: PipeNode | list[PipeNode]) -> None:
         if not (isinstance(inputs, PipeNode) or (isinstance(inputs, list) and all(isinstance(x, PipeNode) for x in inputs))):
-            raise ValueError("inputs must be a PipeNode or a list of PipeNode")
+            raise TypeError("inputs must be a PipeNode or a list of PipeNode")
 
         if not (isinstance(outputs, PipeNode) or (isinstance(outputs, list) and all(isinstance(x, PipeNode) for x in outputs))):
-            raise ValueError("outputs must be a PipeNode or a list of PipeNode")
+            raise TypeError("outputs must be a PipeNode or a list of PipeNode")
 
         self.__inputs = inputs if isinstance(inputs, list) else [inputs]
         self.__outputs = outputs if isinstance(outputs, list) else [outputs]
@@ -82,3 +102,11 @@ class Pipeline:
         if len(output) == 1:
             return output[0]
         return output
+
+    def __repr__(self) -> str:
+        input_nodes = ', '.join([repr(node) for node in self.__inputs])
+        output_nodes = ', '.join([repr(node) for node in self.__outputs])
+        return (f"{self.__class__.__name__}("
+                f"inputs=[{input_nodes}], "
+                f"outputs=[{output_nodes}], "
+                f"num_validators={len(self.__validators)})")
