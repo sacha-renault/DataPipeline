@@ -1,3 +1,33 @@
+"""
+data_pipeline.py
+
+This module defines the `Pipeline` class, which is used to create and manage data processing pipelines.
+
+A `Pipeline` consists of interconnected `PipeNode` objects that define a sequence of operations, allowing
+for the execution of complex data processing flows. The `Pipeline` class supports validation of the processed
+data through user-defined `Validator` objects and ensures that the data flows correctly from inputs to outputs.
+
+Classes:
+    Pipeline: Manages the flow of data from input `PipeNode` objects through a series of operations
+              to produce output `PipeNode` objects. Supports validation and execution of the pipeline.
+
+Usage Example:
+    from pipeline import Pipeline
+    from my_nodes import PipeNode
+    from my_validators import MyValidator
+
+    input_node = PipeNode()
+    output_node = PipeNode(parent=input_node)
+    pipeline = Pipeline(inputs=input_node, outputs=output_node)
+
+    # Add a validator to the output
+    validator = MyValidator()
+    pipeline.add_validator(validator, output_index=0)
+
+    # Execute the pipeline with input data
+    result = pipeline(input_data)
+"""
+
 from collections.abc import Callable
 from typing import List, Any, Tuple, Dict
 from .pipe_node import PipeNode
