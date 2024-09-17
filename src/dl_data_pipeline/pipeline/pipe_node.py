@@ -12,9 +12,8 @@ Classes:
     PipeNode: A node in a pipeline that can execute a function based on the values of its parent nodes.
 
 Usage Example:
->>> from pipe_node import PipeNode
 
->>> # Define a simple function to be executed by the node
+>>> from dl_data_pipeline import PipeNode
 >>> def add(x, y):
 >>>     return x + y
 
@@ -54,20 +53,6 @@ class PipeNode:
         parent (list[PipeNode], optional): A list of parent `PipeNode` objects whose values are used as inputs
             to the function. Defaults to None.
         name (str | None, optional): An optional name for the node. Defaults to None.
-
-    Methods:
-        value -> Any:
-            Returns the value produced by the node.
-
-        parent -> list[PipeNode]:
-            Returns the list of parent nodes.
-
-        __repr__() -> str:
-            Returns a string representation of the node, including its name, number of parents, and function.
-
-        execute() -> None:
-            Executes the function associated with this node, using the values from the parent nodes as inputs.
-            The result is stored in the `__value` attribute.
     """
     def __init__(self,
                  func: Callable = None,
@@ -81,10 +66,20 @@ class PipeNode:
 
     @property
     def value(self) -> Any:
+        """Current value of the node.
+
+        Returns:
+            Any: value of the node.
+        """
         return self.__value
 
     @property
     def parent(self) -> list[PipeNode]:
+        """Parents of the node
+
+        Returns:
+            list[PipeNode]: a list of the parents of this node.
+        """
         return self.__parent
 
     def __repr__(self) -> str:
@@ -95,6 +90,9 @@ class PipeNode:
         return value
 
     def execute(self) -> None:
+        """Excecute the function stored in the node with 
+        parent values as argument.
+        """
         if len(self.__parent) != 0 and self.__func is not None:
             # get all value of previous parent
             data_list = [child.value for child in self.__parent]
@@ -103,4 +101,9 @@ class PipeNode:
             self.__value = self.__func(*data_list)
 
     def _set_value(self, value: Any) -> None:
+        """Set the value of the current node.
+
+        Args:
+            value (Any): value to be stored in the node.
+        """
         self.__value = value

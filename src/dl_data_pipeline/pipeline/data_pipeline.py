@@ -12,9 +12,10 @@ Classes:
               to produce output `PipeNode` objects. Supports validation and execution of the pipeline.
 
 Usage Example:
->>> from pipeline import Pipeline
->>> from my_nodes import PipeNode
->>> from my_validators import MyValidator
+
+>>> from dl_data_pipeline import Pipeline
+>>> from dl_data_pipeline import PipeNode
+>>> from dl_data_pipeline.validators import MyValidator
 
 >>> input_node = PipeNode()
 >>> output_node = PipeNode(parent=input_node)
@@ -50,14 +51,8 @@ class Pipeline:
     Raises:
         ValueError: If `inputs` or `outputs` is not a `PipeNode` or a list of `PipeNode`.
 
-    Methods:
-        add_validator(validator: Validator, output_index: int) -> None:
-            Adds a `Validator` to validate the output at the specified index.
-
-        __call__(*args: Any) -> Any:
-            Executes the pipeline with the provided inputs and returns the output(s).
-
     Example:
+    
     >>> # Create a simple pipeline
     >>> input_node = PipeNode()
     >>> output_node = PipeNode(parent=input_node)
@@ -99,6 +94,16 @@ class Pipeline:
         self.__exec_graph = exec_graph[:-1] # remove the last ghost node
 
     def add_validator(self, validator: Validator, output_index: int) -> None:
+        """Add a validator for an output
+
+        Args:
+            validator (Validator): validator object.
+            output_index (int): index of the output to validate.
+
+        Raises:
+            TypeError: Not a Validator type.
+            IndexError: Index is out of bound for outputs list.
+        """
         if not isinstance(validator, Validator):
             raise TypeError(f"validator must be Validator type, not {type(validator)}")
         if output_index >= len(self.__outputs) or output_index < 0:
@@ -109,6 +114,17 @@ class Pipeline:
 
 
     def __call__(self, *args: Any) -> Any:
+        """Init the input node of the graph, execute in topological order
+        and return the output nodes.
+
+        Raises:
+            ValueError: args isn't same length as input length.
+            ValidationError: schema of output doesn't validate the output.
+            RuntimeError: a node produced a runtime error.
+
+        Returns:
+            Any: output of the graph.
+        """
         if len(args) != len(self.__inputs):
             raise ValueError(f"Pipeline takes {len(self.__inputs)} positional(s) argument(s), "
                              f"but {len(args)} were(was) provided")
@@ -119,7 +135,12 @@ class Pipeline:
 
         # excecute
         for node in self.__exec_graph:
-            node.execute()
+            try:
+                node.execute()
+            except Exception as e:
+                raise RuntimeError("Error at runtime when excecuting the graph"
+                                   f"during the node : {node}."
+                                   f"Exception : {e}.")
 
         # return the output node value
         output = [node.value for node in self.__outputs]
@@ -134,6 +155,14 @@ class Pipeline:
         return output
 
     def as_deferred(self, *args) -> PipeNode:
+        """Use pipeline as a Node function for an other pipeline
+
+        Raises:
+            ValueError: No PipeNode were passed as argument.
+
+        Returns:
+            PipeNode: The corresponding Node.
+        """
         # Split args into Node / Non Node
         args_no_data = []
         parents = []
@@ -145,7 +174,7 @@ class Pipeline:
 
         # ensure there is at least ONE PipeNode
         if len(parents) == 0:
-            raise Exception("Found no PipeNode as positional argument"
+            raise ValueError("Found no PipeNode as positional argument"
                             "If you write a pipeline function, test it without `deferred_execution`"
                             "decorator")
 

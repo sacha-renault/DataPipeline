@@ -32,6 +32,15 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 templates_path = ['_templates']
 exclude_patterns = []
 
+autodoc_default_options = {
+    'members': True,
+    'special-members': '__call__',
+    'undoc-members': True,
+    'private-members': True,
+    'inherited-members': True,
+    'show-inheritance': True,
+}
+
 
 
 # -- Options for HTML output -------------------------------------------------

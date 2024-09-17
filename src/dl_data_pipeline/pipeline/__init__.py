@@ -9,7 +9,9 @@ Classes:
     InputNode: A specialized `PipeNode` that represents the entry point of data into the pipeline, holding initial input values without performing any computation.
 
 Usage Example:
->>> from my_pipeline_package import Pipeline, PipeNode, InputNode
+
+>>> # Import lib
+>>> from dl_data_pipeline import Pipeline, PipeNode, InputNode
 
 >>> # Create input nodes
 >>> input_node1 = InputNode(name="input1")
