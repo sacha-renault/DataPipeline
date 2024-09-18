@@ -1,101 +1,173 @@
+"""
+data_pipeline.py
+
+This module defines the `Pipeline` class, which is used to create and manage data processing pipelines.
+
+A `Pipeline` consists of interconnected `PipeNode` objects that define a sequence of operations, allowing
+for the execution of complex data processing flows. The `Pipeline` class supports validation of the processed
+data through user-defined `Validator` objects and ensures that the data flows correctly from inputs to outputs.
+
+Classes:
+    Pipeline: Manages the flow of data from input `PipeNode` objects through a series of operations
+              to produce output `PipeNode` objects. Supports validation and execution of the pipeline.
+"""
+
 from collections.abc import Callable
 from typing import List, Any, Tuple, Dict
+from .pipe_node import PipelineNode
 
 from ..validator import Validator
 
 class Pipeline:
     """
-    A class to manage a sequence of forward and backward processes with optional validation.
+    A class that represents a data processing pipeline consisting of interconnected `PipeNode` objects.
 
-    The `Pipeline` class allows for adding functions to process data in a forward and backward manner.
-    Each process can have associated arguments, keyword arguments, and validators to ensure the processed
-    data meets certain criteria.
+    The `Pipeline` class manages the flow of data from input nodes through a series of operations
+    to produce output nodes. It supports validation of output data through user-defined `Validator` objects.
 
-    Methods:
-        add_forward_process(func, *args, **kwargs): Adds a function to the forward process list.
-        add_forward_validator(validator): Adds a validator to the forward validators list.
-        add_backward_process(func, *args, **kwargs): Adds a function to the backward process list.
-        add_backward_validator(validator): Adds a validator to the backward validators list.
-        forward(data): Processes the data through the forward functions and validators.
-        backward(data): Processes the data through the backward functions and validators.
+    Args:
+        inputs (PipeNode | list[PipeNode]): A single `PipeNode` or a list of `PipeNode` objects
+            that serve as the inputs to the pipeline.
+        outputs (PipeNode | list[PipeNode]): A single `PipeNode` or a list of `PipeNode` objects
+            that serve as the outputs of the pipeline.
+
+    Raises:
+        ValueError: If `inputs` or `outputs` is not a `PipeNode` or a list of `PipeNode`.
+
+    Example:
+    
+    >>> # Create a simple pipeline
+    >>> input_node = PipeNode()
+    >>> output_node = PipeNode(parent=input_node)
+    >>> pipeline = Pipeline(inputs=input_node, outputs=output_node)
+
+    >>> # Add a validator to the output
+    >>> validator = MyValidator()
+    >>> pipeline.add_validator(validator, output_index=0)
+
+    >>> # Execute the pipeline
+    >>> result = pipeline(input_data)
     """
-    def __init__(self) -> None:
-        # forward 
-        self.__forward: List[Callable] = []
-        self.__forward_args: List[Tuple] = []
-        self.__forward_kwargs: List[Dict] = []
-        self.__forward_validators: List[Validator] = []
+    def __init__(self, inputs: PipelineNode | list[PipelineNode], outputs: PipelineNode | list[PipelineNode]) -> None:
+        if not (isinstance(inputs, PipelineNode) or (isinstance(inputs, list) and all(isinstance(x, PipelineNode) for x in inputs))):
+            raise TypeError("inputs must be a PipeNode or a list of PipeNode")
 
-        # backward 
-        self.__backward: List[Callable] = []
-        self.__backward_args: List[Tuple] = []
-        self.__backward_kwargs: List[Dict] = []
-        self.__backward_validators: List[Validator] = []
+        if not (isinstance(outputs, PipelineNode) or (isinstance(outputs, list) and all(isinstance(x, PipelineNode) for x in outputs))):
+            raise TypeError("outputs must be a PipeNode or a list of PipeNode")
 
-    def add_forward_process(self, func: Callable, *args, **kwargs) -> None:
-        if callable(func):
-            self.__forward.append(func)
-            self.__forward_args.append(args)
-            self.__forward_kwargs.append(kwargs)
-        else:
-            raise TypeError(f"func must be a callable object")
-        
-    def add_forward_validator(self, validator: Validator) -> None:
-        if isinstance(validator, Validator):
-            self.__forward_validators.append(validator)
-        else:
-            raise TypeError(f"validator must be a Validator object")
-        
-    def add_backward_process(self, func: Callable, *args, **kwargs) -> None:
-        if callable(func):
-            self.__backward.append(func)
-            self.__backward_args.append(args)
-            self.__backward_kwargs.append(kwargs)
-        else:
-            raise TypeError(f"func must be a callable object")
-        
-    def add_backward_validator(self, validator: Validator) -> None:
-        if isinstance(validator, Validator):
-            self.__backward_validators.append(validator)
-        else:
-            raise TypeError(f"validator must be a Validator object")
-    
-    def forward(self, data: Any) -> Any:
-        call_iterable = zip(self.__forward, self.__forward_args, self.__forward_kwargs)
+        self.__inputs = inputs if isinstance(inputs, list) else [inputs]
+        self.__outputs = outputs if isinstance(outputs, list) else [outputs]
+        self.__validators: list[list[Validator]] = [[] for _ in range(len(self.__outputs))]
 
-        # Process data sequentially
-        for func, args, kwargs in call_iterable:
+        # init an exec graph
+        exec_graph: list[PipelineNode] = []
+        visited = set()
+        virtual_node = PipelineNode(parent = self.__outputs)
+
+        # lambda func to get ordered in topological order
+        def build_topo(v: PipelineNode):
+            if v not in visited:
+                visited.add(v)
+                for child in v.parent:
+                    build_topo(child)
+                exec_graph.append(v)
+
+        # build the actual graph
+        build_topo(virtual_node)
+        self.__exec_graph = exec_graph[:-1] # remove the last ghost node
+
+    def add_validator(self, validator: Validator, output_index: int) -> None:
+        """Add a validator for an output
+
+        Args:
+            validator (Validator): validator object.
+            output_index (int): index of the output to validate.
+
+        Raises:
+            TypeError: Not a Validator type.
+            IndexError: Index is out of bound for outputs list.
+        """
+        if not isinstance(validator, Validator):
+            raise TypeError(f"validator must be Validator type, not {type(validator)}")
+        if output_index >= len(self.__outputs) or output_index < 0:
+            raise IndexError(f"output_index isn't included in [0, len(outputs)[")
+
+        self.__validators[output_index].append(validator)
+
+
+
+    def __call__(self, *args: Any) -> Any:
+        """Init the input node of the graph, execute in topological order
+        and return the output nodes.
+
+        Raises:
+            ValueError: args isn't same length as input length.
+            ValidationError: schema of output doesn't validate the output.
+            RuntimeError: a node produced a runtime error.
+
+        Returns:
+            Any: output of the graph.
+        """
+        if len(args) != len(self.__inputs):
+            raise ValueError(f"Pipeline takes {len(self.__inputs)} positional(s) argument(s), "
+                             f"but {len(args)} were(was) provided")
+
+        # set value in inputs node
+        for node, arg in zip(self.__inputs, args):
+            node._set_value(arg)
+
+        # excecute
+        for node in self.__exec_graph:
             try:
-                data = func(data, *args, **kwargs)
+                node.execute()
             except Exception as e:
-                raise RuntimeError(f"Error in forward process {func.__name__}: {e}")
+                raise RuntimeError("Error at runtime when excecuting the graph"
+                                   f"during the node : {node}."
+                                   f"Exception : {e}.")
 
+        # return the output node value
+        output = [node.value for node in self.__outputs]
 
-        # ensure data don't raise any error with validator
-        for validator in self.__forward_validators:
-            validator.validate(data)
+        # validate data
+        for output_data, validators in zip(output, self.__validators):
+            for validator in validators:
+                validator.validate(output_data)
 
-        return data
-    
-    def backward(self, data: Any) -> Any:
-        call_iterable = zip(self.__backward, self.__backward_args, self.__backward_kwargs)
+        if len(output) == 1:
+            return output[0]
+        return output
 
-        # process data sequentially
-        for func, args, kwargs in call_iterable:
-            try:
-                data = func(data, *args, **kwargs)
-            except Exception as e:
-                raise RuntimeError(f"Error in backward process {func.__name__}: {e}")
+    def as_deferred(self, *args) -> PipelineNode:
+        """Use pipeline as a Node function for an other pipeline
 
+        Raises:
+            ValueError: No PipeNode were passed as argument.
 
-        # ensure data don't raise any error with validator
-        for validator in self.__backward_validators:
-            validator.validate(data)
-        return data
-    
+        Returns:
+            PipeNode: The corresponding Node.
+        """
+        # Split args into Node / Non Node
+        args_no_data = []
+        parents = []
+        for arg in args:
+            if isinstance(arg, PipelineNode):
+                parents.append(arg)
+            else:
+                args_no_data.append(arg)
+
+        # ensure there is at least ONE PipeNode
+        if len(parents) == 0:
+            raise ValueError("Found no PipeNode as positional argument"
+                            "If you write a pipeline function, test it without `deferred_execution`"
+                            "decorator")
+
+        # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
+        deferred_func = lambda *data: self(*data, *args_no_data)
+        deferred_func.__name__ = "Pipeline"
+        return PipelineNode(deferred_func, parents)
+
     def __repr__(self) -> str:
-        return (f"Pipeline("
-                f"forward_processes={len(self.__forward)}, "
-                f"forward_validators={len(self.__forward_validators)}, "
-                f"backward_processes={len(self.__backward)}, "
-                f"backward_validators={len(self.__backward_validators)})")
+        return (f"{self.__class__.__name__}("
+                f"num_inputs = {len(self.__inputs)}, "
+                f"num_outputs = {len(self.__outputs)}, "
+                f"num_validators = {len(self.__validators)})")

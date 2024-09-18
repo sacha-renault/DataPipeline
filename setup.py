@@ -27,12 +27,12 @@ if __name__ == "__main__":
         description='Easy pipeline to process datas.',
         long_description=open('readme.md').read(),
         long_description_content_type='text/markdown',
-        url='https://github.com/sacha-renault/DataPipeline',
+        url='https://sacha-renault.github.io/DataPipeline/',
         # license='MIT',
         # classifiers=[
         #     'Programming Language :: Python :: 3',
         #     'License :: OSI Approved :: MIT License',
         #     'Operating System :: OS Independent',
         # ],
-        python_requires='>=3.8',
+        python_requires='>=3.10',
     )
