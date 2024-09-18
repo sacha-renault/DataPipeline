@@ -1,5 +1,5 @@
 from functools import wraps
-from ..pipeline.pipe_node import PipeNode
+from ..pipeline.pipe_node import PipelineNode
 
 def deferred_execution(func):
     """
@@ -22,7 +22,7 @@ def deferred_execution(func):
         args_no_data = []
         parents = []
         for arg in args:
-            if isinstance(arg, PipeNode):
+            if isinstance(arg, PipelineNode):
                 parents.append(arg)
             else:
                 args_no_data.append(arg)
@@ -36,5 +36,5 @@ def deferred_execution(func):
         # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
         deferred_func = lambda *data: func(*data, *args_no_data, **kwargs)
         deferred_func.__name__ = func.__name__
-        return PipeNode(deferred_func, parents)
+        return PipelineNode(deferred_func, parents)
     return wrapper

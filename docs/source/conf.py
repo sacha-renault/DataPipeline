@@ -34,7 +34,7 @@ exclude_patterns = []
 
 autodoc_default_options = {
     'members': True,
-    'special-members': '__call__',
+    'special-members': '__call__, __getitem__',
     'undoc-members': True,
     'private-members': True,
     'inherited-members': True,

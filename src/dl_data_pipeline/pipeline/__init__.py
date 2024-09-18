@@ -38,4 +38,4 @@ Modules:
 
 from .data_pipeline import Pipeline
 from .input_node import InputNode
-from .pipe_node import PipeNode
+from .pipe_node import PipelineNode

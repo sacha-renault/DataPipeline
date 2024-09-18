@@ -13,9 +13,9 @@ Classes:
 """
 
 from collections.abc import Callable
-from .pipe_node import PipeNode
+from .pipe_node import PipelineNode
 
-class InputNode(PipeNode):
+class InputNode(PipelineNode):
     """
     A class representing an input node in a data processing pipeline.
 

@@ -6,11 +6,11 @@ import numpy as np
 import cv2
 
 from src.dl_data_pipeline.process_functions import process_2d
-from src.dl_data_pipeline.pipeline.pipe_node import PipeNode
+from src.dl_data_pipeline.pipeline.pipe_node import PipelineNode
 
 def test_padding_2d_rgb():
     original_image = np.random.rand(256, 256, 3)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     padded_node = process_2d.padding_2d(node, (512, 512), 0)
     padded_node.execute()
@@ -20,7 +20,7 @@ def test_padding_2d_rgb():
 
 def test_padding_2d_error_not_accepted_dim():
     original_image = np.random.rand(256)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     with pytest.raises(ValueError):
         padded_node = process_2d.padding_2d(node, (512, 512), 0)
@@ -34,7 +34,7 @@ def test_padding_2d_error_not_accepted_dim():
 
 def test_padding_2d_error_too_big():
     original_image = np.random.rand(256, 256)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     with pytest.raises(ValueError):
         padded_node = process_2d.padding_2d(node, (128, 128), 0)
@@ -42,7 +42,7 @@ def test_padding_2d_error_too_big():
 
 def test_padding_2d_bw():
     original_image = np.random.rand(256, 256)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     padded_node = process_2d.padding_2d(node, (512, 512), 1.0)
     padded_node.execute()
@@ -52,7 +52,7 @@ def test_padding_2d_bw():
 
 def test_image_to_channel_num_2d():
     original_image = np.random.rand(256, 256)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     extended_node = process_2d.image_to_channel_num(node, 1)
     extended_node.execute()
@@ -62,7 +62,7 @@ def test_image_to_channel_num_2d():
 
 def test_image_to_channel_num_3d1():
     original_image = np.random.rand(256, 256, 1)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     extended_node = process_2d.image_to_channel_num(node, 4)
     extended_node.execute()
@@ -72,7 +72,7 @@ def test_image_to_channel_num_3d1():
 
 def test_image_to_channel_num_3d2():
     original_image = np.random.rand(256, 256, 3)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     extended_node = process_2d.image_to_channel_num(node, 5)
     extended_node.execute()
@@ -83,7 +83,7 @@ def test_image_to_channel_num_3d2():
 
 def test_image_to_channel_num_3d3():
     original_image = np.random.rand(256, 256, 5)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(original_image)
     truncated_node = process_2d.image_to_channel_num(node, 3)
     truncated_node.execute()
@@ -93,7 +93,7 @@ def test_image_to_channel_num_3d3():
 
 def test_resize_with_max_distortion_no_distortion():
     data = np.random.rand(256, 128, 3)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     resized_node = process_2d.resize_with_max_distortion(node, (512, 256), 100.0)
     resized_node.execute()
@@ -102,7 +102,7 @@ def test_resize_with_max_distortion_no_distortion():
 
 def test_resize_with_max_distortion_with_distortion():
     data = np.random.rand(256, 256, 3)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     resized_node = process_2d.resize_with_max_distortion(node, (512, 256), 100.0)
     resized_node.execute()
@@ -111,7 +111,7 @@ def test_resize_with_max_distortion_with_distortion():
 
 def test_resize_with_max_distortion_invalid_input_shape():
     data = np.random.rand(256, 256, 256, 3)  # Invalid shape
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     with pytest.raises(ValueError, match=r"Input data is not a 2D or 3D array"):
         resized_node = process_2d.resize_with_max_distortion(node, (512, 512), 0.0)
@@ -119,7 +119,7 @@ def test_resize_with_max_distortion_invalid_input_shape():
 
 def test_resize_with_max_distortion_non_image():
     data = np.random.rand(256, 256)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     resized_node = process_2d.resize_with_max_distortion(node, (512, 512), 10)
     resized_node.execute()
@@ -128,7 +128,7 @@ def test_resize_with_max_distortion_non_image():
 
 def test_resize_with_max_distortion_adjust_width_then_height():
     data = np.random.rand(125, 100, 3)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     resized_node = process_2d.resize_with_max_distortion(node, (100, 100), 5)
     resized_node.execute()
@@ -138,7 +138,7 @@ def test_resize_with_max_distortion_adjust_width_then_height():
 def test_hwc_to_chw():
     shape = (10, 5, 2)
     data = np.random.rand(*shape)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     ndata_node = process_2d.image_hwc_to_chw(node)
     ndata_node.execute()
@@ -148,7 +148,7 @@ def test_hwc_to_chw():
 def test_chw_to_hwc():
     shape = (10, 5, 2)
     data = np.random.rand(*shape)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     ndata_node = process_2d.image_chw_to_hwc(node)
     ndata_node.execute()
@@ -158,7 +158,7 @@ def test_chw_to_hwc():
 def test_hwc_to_chw_wrong_dim():
     shape = (10, 5)
     data = np.random.rand(*shape)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     with pytest.raises(ValueError):
         ndata_node = process_2d.image_hwc_to_chw(node)
@@ -167,7 +167,7 @@ def test_hwc_to_chw_wrong_dim():
 def test_chw_to_hwc_wrong_dim():
     shape = (10, 5, 2, 5)
     data = np.random.rand(*shape)
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value(data)
     with pytest.raises(ValueError):
         ndata_node = process_2d.image_chw_to_hwc(node)
@@ -185,7 +185,7 @@ def test_open_rgb_image(mock_imread, mock_cvtColor):
     mock_cvtColor.return_value = mock_img_rgb
 
     # Call the function
-    node = PipeNode()
+    node = PipelineNode()
     node._set_value("dummy/path/to/image.jpg")
     result_node = process_2d.open_rgb_image(node)
     result_node.execute()

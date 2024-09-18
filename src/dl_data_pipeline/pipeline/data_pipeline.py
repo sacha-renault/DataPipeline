@@ -31,7 +31,7 @@ Usage Example:
 
 from collections.abc import Callable
 from typing import List, Any, Tuple, Dict
-from .pipe_node import PipeNode
+from .pipe_node import PipelineNode
 
 from ..validator import Validator
 
@@ -65,11 +65,11 @@ class Pipeline:
     >>> # Execute the pipeline
     >>> result = pipeline(input_data)
     """
-    def __init__(self, inputs: PipeNode | list[PipeNode], outputs: PipeNode | list[PipeNode]) -> None:
-        if not (isinstance(inputs, PipeNode) or (isinstance(inputs, list) and all(isinstance(x, PipeNode) for x in inputs))):
+    def __init__(self, inputs: PipelineNode | list[PipelineNode], outputs: PipelineNode | list[PipelineNode]) -> None:
+        if not (isinstance(inputs, PipelineNode) or (isinstance(inputs, list) and all(isinstance(x, PipelineNode) for x in inputs))):
             raise TypeError("inputs must be a PipeNode or a list of PipeNode")
 
-        if not (isinstance(outputs, PipeNode) or (isinstance(outputs, list) and all(isinstance(x, PipeNode) for x in outputs))):
+        if not (isinstance(outputs, PipelineNode) or (isinstance(outputs, list) and all(isinstance(x, PipelineNode) for x in outputs))):
             raise TypeError("outputs must be a PipeNode or a list of PipeNode")
 
         self.__inputs = inputs if isinstance(inputs, list) else [inputs]
@@ -77,12 +77,12 @@ class Pipeline:
         self.__validators: list[list[Validator]] = [[] for _ in range(len(self.__outputs))]
 
         # init an exec graph
-        exec_graph: list[PipeNode] = []
+        exec_graph: list[PipelineNode] = []
         visited = set()
-        virtual_node = PipeNode(parent = self.__outputs)
+        virtual_node = PipelineNode(parent = self.__outputs)
 
         # lambda func to get ordered in topological order
-        def build_topo(v: PipeNode):
+        def build_topo(v: PipelineNode):
             if v not in visited:
                 visited.add(v)
                 for child in v.parent:
@@ -154,7 +154,7 @@ class Pipeline:
             return output[0]
         return output
 
-    def as_deferred(self, *args) -> PipeNode:
+    def as_deferred(self, *args) -> PipelineNode:
         """Use pipeline as a Node function for an other pipeline
 
         Raises:
@@ -167,7 +167,7 @@ class Pipeline:
         args_no_data = []
         parents = []
         for arg in args:
-            if isinstance(arg, PipeNode):
+            if isinstance(arg, PipelineNode):
                 parents.append(arg)
             else:
                 args_no_data.append(arg)
@@ -181,7 +181,7 @@ class Pipeline:
         # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
         deferred_func = lambda *data: self(*data, *args_no_data)
         deferred_func.__name__ = "Pipeline"
-        return PipeNode(deferred_func, parents)
+        return PipelineNode(deferred_func, parents)
 
     def __repr__(self) -> str:
         return (f"{self.__class__.__name__}("

@@ -35,11 +35,10 @@ Usage Example:
 
 
 from __future__ import annotations
-from functools import wraps
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
-class PipeNode:
+class PipelineNode:
     """
     A class representing a node in a data processing pipeline.
 
@@ -56,10 +55,10 @@ class PipeNode:
     """
     def __init__(self,
                  func: Callable = None,
-                 parent: list[PipeNode] | None = None,
+                 parent: list[PipelineNode] | None = None,
                  name: str | None = None,
                  ) -> None:
-        self.__parent: list[PipeNode] = parent if parent is not None else []
+        self.__parent: list[PipelineNode] = parent if parent is not None else []
         self.__name = name
         self.__func = func
         self.__value = None
@@ -74,7 +73,7 @@ class PipeNode:
         return self.__value
 
     @property
-    def parent(self) -> list[PipeNode]:
+    def parent(self) -> list[PipelineNode]:
         """Parents of the node
 
         Returns:
@@ -88,6 +87,54 @@ class PipeNode:
             value += f", function : {self.__func.__name__}"
         value += ">"
         return value
+    
+    def __getitem__(self, key : int | str | slice) -> PipelineNode:
+        """Access an item in a subscriptable value of the node.
+
+        This method creates a new `PipelineNode` that represents 
+        the key-th or key-named item from the current node's value 
+        if the value is subscriptable (supports indexing). If the 
+        value is not subscriptable, a `TypeError` is raised.
+
+        Args:
+            key (int | str | slice): The key to access the item from the subscriptable value. 
+                             Can be an integer (for index-based access) or a string (for key-based access).
+
+        Raises:
+            TypeError: If the node's value is not subscriptable.
+
+        Returns:
+            PipelineNode: A new node representing the accessed item from the subscriptable object.
+
+        Example:
+        >>> # create a node
+        >>> node = PipeNode()
+
+        >>> # execute a function on the node that could result in a subscriptable object
+        >>> # for example, a function that reads some columns from a CSV row and returns 
+        >>> # an iterable of values
+        >>> x = read_cols_in_csv(node, "name", "path")
+        
+        >>> # get the results in separate nodes
+        >>> name = x[0]  # node representing the 'name'
+        >>> path = x[1]  # node representing the 'path'
+        """      
+        # define the lambda
+        def get_item(*_):
+            if hasattr(self.value, '__getitem__'):
+                return self.value[key]
+            else:
+                raise TypeError(f"value of this node of type {type(self.value)} "
+                                "cannot be accessed with [] "
+                                "ensure graph construction is made properly")
+        
+        # make it named like the __get_item__ function
+        get_item.__name__ = "__getitem__"
+        
+        # create a Functional Node that will dynamically get the keyth result
+        # in the parent Node
+        return PipelineNode(get_item, parent=[self], name = "__getitem__")
+            
 
     def execute(self) -> None:
         """Excecute the function stored in the node with 
