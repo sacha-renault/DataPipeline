@@ -88,7 +88,7 @@ class PipelineNode:
         value += ">"
         return value
     
-    def __getitem__(self, key : int | str | slice) -> PipelineNode:
+    def __getitem__(self, key : int | str | Any) -> PipelineNode:
         """Access an item in a subscriptable value of the node.
 
         This method creates a new `PipelineNode` that represents 
@@ -97,7 +97,7 @@ class PipelineNode:
         value is not subscriptable, a `TypeError` is raised.
 
         Args:
-            key (int | str | slice): The key to access the item from the subscriptable value. 
+            key (int | str | Any): The key to access the item from the subscriptable value. 
                              Can be an integer (for index-based access) or a string (for key-based access).
 
         Raises:
