@@ -11,27 +11,28 @@ Classes:
 Usage Example:
 
 >>> # Import lib
->>> from dl_data_pipeline import Pipeline, PipeNode, InputNode
+>>> from dl_data_pipeline import Pipeline, InputNode, deferred_execution
 
 >>> # Create input nodes
->>> input_node1 = InputNode(name="input1")
->>> input_node2 = InputNode(name="input2")
+>>> input_node1 = InputNode(name="1")   # InputNode base name is input, it then concatenate
+>>> input_node2 = InputNode(name="2")   # Any subname passed by user   
 
->>> # Create a processing node that adds the values from the two input nodes
->>> add_node = PipeNode(func=lambda x, y: x + y, parent=[input_node1, input_node2], name="sum")
+>>> # use any function, you can also create one
+>>> @deferred_execution
+>>> def sum(v1, v2):
+>>>     return v1 + v2
+
+>>> # create a functional PipelineNode with this function
+>>> add_node = sum(input_node1, input_node2)
 
 >>> # Create a pipeline
 >>> pipeline = Pipeline(inputs=[input_node1, input_node2], outputs=add_node)
 
->>> # Set input values
->>> input_node1._set_value(10)
->>> input_node2._set_value(20)
-
->>> # Execute the pipeline
->>> result = pipeline()  # result will be 30
+>>> # Compute pipe
+>>> result = pipeline(20, 10) # will be 30
 
 Modules:
-    pipeline: Contains the `Pipeline` class for managing the data flow in a pipeline.
+    data_pipeline: Contains the `Pipeline` class for managing the data flow in a pipeline.
     pipe_node: Contains the `PipeNode` class, the basic building block for creating data processing graphs.
     input_node: Contains the `InputNode` class, a specialized node for inputting data into the pipeline.
 """

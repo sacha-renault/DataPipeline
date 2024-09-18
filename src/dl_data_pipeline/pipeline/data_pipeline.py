@@ -10,23 +10,6 @@ data through user-defined `Validator` objects and ensures that the data flows co
 Classes:
     Pipeline: Manages the flow of data from input `PipeNode` objects through a series of operations
               to produce output `PipeNode` objects. Supports validation and execution of the pipeline.
-
-Usage Example:
-
->>> from dl_data_pipeline import Pipeline
->>> from dl_data_pipeline import PipeNode
->>> from dl_data_pipeline.validators import MyValidator
-
->>> input_node = PipeNode()
->>> output_node = PipeNode(parent=input_node)
->>> pipeline = Pipeline(inputs=input_node, outputs=output_node)
-
->>> # Add a validator to the output
->>> validator = MyValidator()
->>> pipeline.add_validator(validator, output_index=0)
-
->>> # Execute the pipeline with input data
->>> result = pipeline(input_data)
 """
 
 from collections.abc import Callable

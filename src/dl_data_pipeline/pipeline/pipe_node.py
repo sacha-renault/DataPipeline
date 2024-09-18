@@ -106,7 +106,7 @@ class PipelineNode:
         Returns:
             PipelineNode: A new node representing the accessed item from the subscriptable object.
 
-        Example:
+        Example:\n
         >>> # create a node
         >>> node = PipeNode()
 
