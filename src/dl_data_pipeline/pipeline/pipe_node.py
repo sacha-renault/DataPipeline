@@ -158,7 +158,7 @@ class PipelineNode:
 
     def __iter__(self) -> Generator[PipelineNode, None, None]:
         if self.__n_iter is None:
-            raise SyntaxError("Must call `upack` method before iterating")
+            raise RuntimeError("Must call `unwrap` method before iterating")
 
         for i in range(self.__n_iter):
             yield self[i]
