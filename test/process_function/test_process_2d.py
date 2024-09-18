@@ -196,3 +196,67 @@ def test_open_rgb_image(mock_imread, mock_cvtColor):
     mock_cvtColor.assert_called_once_with(mock_img, cv2.COLOR_BGR2RGB)
     np.testing.assert_array_equal(result, mock_img_rgb)
 
+
+def test_max_pooling_value():
+    data = np.array([
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10,11,12],
+        [13,14,15,16]
+    ])
+    node = PipelineNode()
+    node._set_value(data)
+    ndata_node = process_2d.max_pooling_2d(node)
+    ndata_node.execute()
+    ndata = ndata_node.value
+    expected_data = np.array([
+        [6, 8],
+        [14, 16]
+    ])
+    assert np.array_equal(ndata.reshape(2, 2), expected_data)
+
+def test_avg_pooling_value():
+    data = np.array([
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10,11,12],
+        [13,14,15,16]
+    ])
+    node = PipelineNode()
+    node._set_value(data)
+    ndata_node = process_2d.avg_pooling_2d(node)
+    ndata_node.execute()
+    ndata = ndata_node.value
+    expected_data = np.array([
+        [7/2, 11/2],
+        [23/2, 27/2]
+    ])
+    assert np.array_equal(ndata.reshape(2, 2), expected_data)
+
+def test_any_pooling_value():
+    data = np.array([
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10,11,12],
+        [13,14,15,16]
+    ])
+    node = PipelineNode()
+    node._set_value(data)
+    ndata_node = process_2d.any_pooling_2d(node, pooling_function=np.sum)
+    ndata_node.execute()
+    ndata = ndata_node.value
+    expected_data = np.array([
+        [14, 22],
+        [46, 54]
+    ])
+    assert np.array_equal(ndata.reshape(2, 2), expected_data)
+
+def test_max_pooling_shape():
+    data = np.random.rand(100,100,3)
+    node = PipelineNode()
+    node._set_value(data)
+    ndata_node = process_2d.max_pooling_2d(node)
+    ndata_node.execute()
+    ndata = ndata_node.value
+    expected_shape = (50,50,3)
+    assert expected_shape == ndata.shape

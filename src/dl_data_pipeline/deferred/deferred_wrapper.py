@@ -29,9 +29,9 @@ def deferred_execution(func):
 
         # ensure there is at least ONE PipeNode
         if len(parents) == 0:
-            raise Exception("Found no PipeNode as positional argument"
+            raise TypeError("Found no argument with type PipelineNode as positional argument"
                             "If you write a pipeline function, test it without `deferred_execution`"
-                            "decorator")
+                            "decorator") # TODO change to an other exception
 
         # kw_no_data = {k: v for k, v in kwargs.items() if not isinstance(v, PipeNode)}
         deferred_func = lambda *data: func(*data, *args_no_data, **kwargs)

@@ -4,6 +4,7 @@ import pytest
 from src.dl_data_pipeline import Pipeline, InputNode, deferred_execution
 from src.dl_data_pipeline.validator import MinMaxValidator, ValidationError
 from src.dl_data_pipeline.process_functions.any_process import rescale
+from src.dl_data_pipeline.process_functions.process_2d import image_chw_to_hwc
 
 def test_pipeline_basic():
     inp = InputNode()
@@ -69,12 +70,26 @@ def test_pipeline_trigger_validator():
     with pytest.raises(ValidationError):
         pipe(np.random.rand(10))
 
-# def test_pipeline_error_processing():
-#     pipe = Pipeline()
-#     pipe.add_forward_process(rescale, 0, 2)
-#     pipe.add_backward_process(rescale, 0, 0.5)
-#     flat_data = np.zeros(10)
-#     with pytest.raises(RuntimeError):
-#         pipe.forward(flat_data)
-#     with pytest.raises(RuntimeError):
-#         pipe.backward(flat_data)
+def test_sub_pipeline():
+    inp = InputNode()
+    inp2 = InputNode()
+    output = rescale(inp, inp2, 5)
+    subpipe = Pipeline([inp, inp2], output)
+
+    n_input = InputNode()
+    n_output = subpipe.as_deferred(n_input, 0)
+    main_pipe = Pipeline(n_input, n_output)
+
+    result = main_pipe(np.random.rand(10, 10) - 0.5)
+
+    assert np.abs(np.min(result)) < 1e-9
+    assert np.abs(np.max(result) - 5) < 1e-9
+
+def test_sub_pipeline_no_node_execption():
+    inp = InputNode()
+    inp2 = InputNode()
+    output = rescale(inp, inp2, 5)
+    subpipe = Pipeline([inp, inp2], output)
+
+    with pytest.raises(TypeError):
+        subpipe.as_deferred(0, 0)

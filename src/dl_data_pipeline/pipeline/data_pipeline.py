@@ -157,7 +157,7 @@ class Pipeline:
 
         # ensure there is at least ONE PipeNode
         if len(parents) == 0:
-            raise ValueError("Found no PipeNode as positional argument"
+            raise TypeError("Found no PipeNode as positional argument"
                             "If you write a pipeline function, test it without `deferred_execution`"
                             "decorator")
 
