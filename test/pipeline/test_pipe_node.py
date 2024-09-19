@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from src.dl_data_pipeline.pipeline import PipelineNode, Pipeline
+from src.dl_data_pipeline.pipeline import PipelineNode, Pipeline, InputNode
+from src.dl_data_pipeline import deferred_execution
 
 def test_pipe_node_getitem():
     input = PipelineNode()
@@ -22,3 +23,19 @@ def test_pipe_node_getitem():
 
     with pytest.raises(RuntimeError):
         pipe(10) # non subscriptable
+
+def test_node_unwrap():
+    @deferred_execution
+    def dummy_func(v):
+        return v + 1, v / 2
+
+    inp = InputNode()
+    x, y = dummy_func(inp).unwrap(2)
+    pipe = Pipeline(inputs=inp, outputs=[x, y])
+    o1, o2 = pipe(10)
+    assert o1 == 11
+    assert o2 == 5
+
+def test_node_iter_no_unwrap():
+    with pytest.raises(RuntimeError):
+        x, y = PipelineNode()
