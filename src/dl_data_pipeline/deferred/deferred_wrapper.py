@@ -16,26 +16,23 @@ def instant_excecution() -> None: # type: ignore
     Once the block is exited, deferred execution is restored to its previous state, even if
     an exception occurs within the block.
 
-    Example usage:
-        @deferred_function
-        def add(a, b):
-            return a + b
-
-        # Deferred execution mode (default)
-        result_node = add(PipelineNode(), 5)
-
-        # Instant execution mode (within context)
-        with instant_execution():
-            result = add(3, 5)
-            # Executes immediately and returns 8
-
     Note:
-        - This context manager ensures that deferred execution is always restored after the
-          `with` block, even if an exception is raised.
+        This context manager ensures that deferred execution is always restored after the
+        *with* block, even if an exception is raised.
 
-    Raises:
-        Any exceptions raised during the execution of the code inside the `with` block will be
-        propagated, but deferred execution will be restored regardless of exceptions.
+    Example usage:
+
+    >>> @deferred_function
+    >>> def add(a, b):
+    >>>     return a + b
+
+    >>> # Deferred execution mode (default)
+    >>> result_node = add(PipelineNode(), 5)
+
+    >>> # Instant execution mode (within context)
+    >>> with instant_execution():
+    >>>     result = add(3, 5)
+    >>>     # Executes immediately and returns 8
     """
     global _DEFERRED_EXECUTION_MODE
     _DEFERRED_EXECUTION_MODE = False
