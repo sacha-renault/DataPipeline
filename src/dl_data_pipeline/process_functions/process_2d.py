@@ -1,4 +1,5 @@
 from typing import Tuple
+from collections.abc import Callable
 
 import cv2
 import numpy as np
@@ -225,3 +226,92 @@ def image_chw_to_hwc(data: np.ndarray) -> np.ndarray:
     if len(data.shape) != 3:
         raise ValueError("input data must be dim 3")
     return np.transpose(data, [1, 2, 0])
+
+
+def _reshape_array_for_pooling(data: np.ndarray, strides: int) -> np.ndarray:
+    """Reshape the input data for pooling.
+
+    This function prepares a 2D array for pooling operations by reshaping the data 
+    into smaller blocks based on the given stride.
+
+    Args:
+        data (np.ndarray): The input array representing the image or data to be pooled.
+        strides (int): The stride size that determines the size of the blocks used for pooling.
+
+    Returns:
+        np.ndarray: A reshaped array where the input data has been divided into blocks 
+                    of shape (mh, strides, mw, strides, -1), where mh and mw are the 
+                    dimensions after pooling.
+    """
+    h, w = data.shape[:2]
+    mh = h // strides
+    mw = w // strides
+    return data[:mh*strides, :mw*strides].reshape(mh, strides, mw, strides, -1)
+
+@deferred_execution
+def max_pooling_2d(data: np.ndarray, strides: int = 2) -> np.ndarray:
+    """Apply 2D max pooling to the input data.
+
+    This function applies max pooling to the input 2D array, reducing its size by selecting 
+    the maximum value from each block of data, based on the specified stride.
+
+    Args:
+        data (np.ndarray): The input array representing the image or data to be pooled.
+        strides (int, optional): The stride size that determines the size of the blocks 
+                                 used for pooling. Defaults to 2.
+
+    Returns:
+        np.ndarray: A 2D array where max pooling has been applied, reducing the size 
+                    of the input array based on the stride.
+    """
+    return _reshape_array_for_pooling(data, strides).max(axis=(1,3))
+
+@deferred_execution
+def avg_pooling_2d(data: np.ndarray, strides: int = 2) -> np.ndarray:
+    """Apply 2D average pooling to the input data.
+
+    This function applies average pooling to the input 2D array, reducing its size by calculating 
+    the mean value from each block of data, based on the specified stride.
+
+    Args:
+        data (np.ndarray): The input array representing the image or data to be pooled.
+        strides (int, optional): The stride size that determines the size of the blocks 
+                                 used for pooling. Defaults to 2.
+
+    Returns:
+        np.ndarray: A 2D array where average pooling has been applied, reducing the size 
+                    of the input array based on the stride.
+    """
+    return _reshape_array_for_pooling(data, strides).mean(axis=(1,3))
+
+@deferred_execution
+def any_pooling_2d(
+    data: np.ndarray, 
+    strides: int = 2, *, 
+    pooling_function: Callable,
+    axis_kw: str = "axis") -> np.ndarray:
+    """Apply a custom pooling operation to the input data.
+
+    This function allows for flexible pooling operations by accepting a custom pooling 
+    function. It reshapes the input data into blocks based on the specified stride, 
+    and then applies the given pooling function to the blocks.
+
+    Args:
+        data (np.ndarray): The input array representing the image or data to be pooled.
+        strides (int, optional): The stride size that determines the size of the blocks 
+                                 used for pooling. Defaults to 2.
+        pooling_function (Callable): A function that takes the reshaped blocks of data 
+                                     and applies the desired pooling operation (e.g., max pooling, 
+                                     average pooling).
+        axis_kw (str, optional): The keyword name for specifying the axis along which 
+                                 pooling should be applied in the custom pooling function. 
+                                 Defaults to "axis".
+
+    Returns:
+        np.ndarray: A 2D array where the custom pooling function has been applied, 
+                    reducing the size of the input array based on the stride.
+    """
+    pooled = _reshape_array_for_pooling(data, strides)
+    kw = {axis_kw: (1,3)}
+    return pooling_function(pooled, **kw)
+

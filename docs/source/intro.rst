@@ -102,6 +102,54 @@ Create a pipeline with more than 1 output
     input_value = ... # any value that matches the required argument
     res1, res2 = pipe(input_value)
 
+Create a pipeline with subscription
+-----------------------------------------
+
+PipelineNode are subscriptable object, but since we don't know before runtime the number of element in the iterable.
+
+.. code-block:: python
+    
+    # import process 2d package
+    import dl_data_pipeline as dp 
+
+    @deferred_execution
+    def min_max(data):
+        return np.min(data), np.max(data)
+
+    # Define the inputs for the pipeline
+    input_node1 = dp.InputNode(name="1")
+
+    # define a graph here
+    x = min_max(input_node1)
+
+    # getitem 
+    min_value = x[0] # object of x at index 0 will be assigned to min_value node at runtime
+    max_value = x[1] # object of x at index 1 will be assigned to max_value node at runtime
+    # error_value = x[2] # if we add this line, pipeline would be valid but would throw runtime error since
+    # it would try to assign to error_value node the element at index 2 of x that doesn't exist
+
+    # create the pipeline
+    pipe = dp.Pipeline(inputs=[input_node1], outputs=[min_value, max_value])
+
+    # the pipeline returns now more than 1 result
+    input_value = ... # any value that matches the required argument
+    res1, res2 = pipe(input_value)
+
+Alternatively, we can use unwrap to specify before runtime the number of element the node should have.
+
+.. code-block:: python
+
+    # same as previous example
+    input_node1 = dp.InputNode(name="1")
+
+    # we specify here how many time we can iterate on x 
+    # so we can use this syntax
+    min_value, max_value = min_max(input_node1).unwrap(2)
+
+    # the pipeline returns now more than 1 result
+    input_value = ... # any value that matches the required argument
+    res1, res2 = pipe(input_value)
+
 Add some validator
 --------------------------
 .. code-block:: python

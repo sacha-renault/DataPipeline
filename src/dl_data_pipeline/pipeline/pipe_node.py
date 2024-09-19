@@ -62,6 +62,7 @@ class PipelineNode:
         self.__name = name
         self.__func = func
         self.__value = None
+        self.__n_iter = None
 
     @property
     def value(self) -> Any:
@@ -154,3 +155,44 @@ class PipelineNode:
             value (Any): value to be stored in the node.
         """
         self.__value = value
+
+    def __iter__(self) -> Generator[PipelineNode, None, None]:
+        if self.__n_iter is None:
+            raise RuntimeError("Must call `unwrap` method before iterating")
+
+        for i in range(self.__n_iter):
+            yield self[i]
+
+    def unwrap(self, num: int) -> PipelineNode:
+        """Prepare the node for iteration with a specified number of outputs.
+
+        This method sets the number of iterations (`num`) that the node should 
+        be unwrapped into. It allows the node to be used in a context where 
+        multiple outputs are expected, like tuple unpacking.
+
+        Args:
+            num (int): The number of outputs expected from the node.
+
+        Returns:
+            PipelineNode: The node itself, ready to be iterated over the specified 
+                        number of outputs.
+
+        Example:
+
+        >>> # Define a function that returns a subscriptable object (e.g., a tuple)
+        >>> @deferred_execution
+        >>> def min_max(v1, v2):
+        >>>     return np.min(v1), np.max(v2)
+
+        >>> # Define the pipeline
+        >>> input_node = InputNode(name="1")
+        >>> x = ...  # Add some processing functions here ...
+        >>> min_node, max_node = min_max(x).unwrap(2)
+        >>> pipeline = Pipeline(inputs=[input_node], outputs=[min_node, max_node])
+
+        >>> # Unwrap allows you to get multiple nodes from a single node when the value 
+        >>> # is a subscriptable object, like a tuple.
+        >>> min_value, max_value = pipeline(data)  # 'data' must be defined with the expected input.
+        """
+        self.__n_iter = num
+        return self
