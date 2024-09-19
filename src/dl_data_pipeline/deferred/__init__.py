@@ -35,7 +35,7 @@ Usage Example:
 
 
 
-from .deferred_wrapper import deferred_execution
+from .deferred_wrapper import deferred_execution, instant_excecution
 
 def use_deferred_execution():
     import inspect
